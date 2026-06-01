@@ -136,17 +136,27 @@ main{padding:16px;max-width:760px;margin:0 auto;}
 .stat-card-val.profit{color:#a78bfa;}
 .stat-card-val.stock{color:#38bdf8;}
 .stat-card-sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;}
-.monthly-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;}
-.chart-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px;}
-.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;}
-.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
-.chart-bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .3s;}
-.chart-bar.buy-bar{background:var(--y);opacity:.8;}
-.chart-bar.sell-bar{background:var(--g);opacity:.8;}
-.chart-month-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;}
-.chart-legend{display:flex;gap:12px;margin-top:8px;}
+.monthly-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
+.chart-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;}
+.chart-subtitle{font-size:10px;color:#444;font-family:'DM Mono',monospace;margin-bottom:14px;}
+.chart-area{position:relative;height:120px;margin-bottom:6px;}
+.chart-grid-lines{position:absolute;top:0;left:0;right:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;}
+.chart-grid-line{width:100%;height:1px;background:rgba(255,255,255,.06);}
+.chart-grid-labels{position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;}
+.chart-grid-label{font-size:9px;color:#444;font-family:'DM Mono',monospace;line-height:1;}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 2px;}
+.chart-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;}
+.chart-bar-pair{display:flex;align-items:flex-end;gap:2px;width:100%;flex:1;}
+.chart-bar{border-radius:3px 3px 0 0;min-height:3px;transition:all .4s;flex:1;}
+.chart-bar.buy-bar{background:linear-gradient(to top,#b8960a,var(--y));}
+.chart-bar.sell-bar{background:linear-gradient(to top,#00a078,var(--g));}
+.chart-bar.cf-bar-pos{background:linear-gradient(to top,#7c3aed,#a78bfa);}
+.chart-bar.cf-bar-neg{background:linear-gradient(to top,#991b1b,var(--danger));border-radius:0 0 3px 3px;}
+.chart-month-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center;}
+.chart-val-label{font-size:8px;color:#555;font-family:'DM Mono',monospace;text-align:center;margin-bottom:2px;}
+.chart-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
 .chart-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
-.chart-leg-dot{width:8px;height:8px;border-radius:2px;}
+.chart-leg-dot{width:10px;height:10px;border-radius:2px;}
 /* 記録リスト */
 .divider{height:1px;background:var(--border);margin:20px 0;}
 .rec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
@@ -268,10 +278,16 @@ main{padding:16px;max-width:760px;margin:0 auto;}
         <div class="stat-card-val stock" id="statStock">¥0</div>
         <div class="stat-card-sub" id="statStockCnt">残 0点</div>
       </div>
+      <div class="stat-card full">
+        <div class="stat-card-label">キャッシュフロー（販売収入 − 仕入支出）</div>
+        <div class="stat-card-val" id="statCF">¥0</div>
+        <div class="stat-card-sub" id="statCFSub">販売収入 ¥0 　仕入支出 ¥0</div>
+      </div>
     </div>
     <div class="monthly-chart">
       <div class="chart-title">過去6ヶ月 仕入れ・販売推移</div>
-      <div class="chart-bars" id="chartBars"></div>
+      <div class="chart-subtitle">左：仕入れ　右：販売　単位：万円</div>
+      <div class="chart-bars" id="chartBars" style="display:flex;align-items:flex-end;gap:6px;height:110px;padding:0 2px;"></div>
       <div class="chart-legend">
         <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--y)"></div>仕入れ</div>
         <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--g)"></div>販売</div>
@@ -406,37 +422,48 @@ function renderStats(){
   document.getElementById('statStock').textContent='¥'+Math.round(stockVal).toLocaleString();
   document.getElementById('statStockCnt').textContent='残 '+stockQty+'点';
 
+  // キャッシュフロー = 販売収入 - 仕入支出
+  var cfVal = sellTotal - buyTotal;
+  var cfEl = document.getElementById('statCF');
+  cfEl.textContent = (cfVal>=0?'+':'')+'¥'+Math.round(cfVal).toLocaleString();
+  cfEl.style.color = cfVal>=0?'#00c896':'#ff4d4d';
+  document.getElementById('statCFSub').textContent =
+    '販売収入 ¥'+Math.round(sellTotal).toLocaleString()+
+    '　仕入支出 ¥'+Math.round(buyTotal).toLocaleString();
+
   // 過去6ヶ月チャート
   renderChart();
 }
 
 function renderChart(){
-  var bars=document.getElementById('chartBars'); bars.innerHTML='';
+  var container=document.getElementById('chartBars'); container.innerHTML='';
   var months=[];
-  for(var i=5;i>=0;i--){
-    var m=currentMonth-i, y=currentYear;
-    while(m<0){m+=12;y--;}
-    months.push({y:y,m:m});
-  }
-  var maxVal=1;
+  for(var i=5;i>=0;i--){var m=currentMonth-i,y=currentYear;while(m<0){m+=12;y--;}months.push({y:y,m:m});}
   var data=months.map(function(mo){
     var mn=mo.y+'-'+String(mo.m+1).padStart(2,'0');
     var b=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);}).reduce(function(s,r){return s+(r.total||0);},0);
     var s=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);}).reduce(function(s,r){return s+(r.price||0);},0);
-    maxVal=Math.max(maxVal,b,s);
-    return{label:(mo.m+1)+'月',buy:b,sell:s};
+    return{label:(mo.m+1)+'月',buy:b,sell:s,cf:s-b};
   });
+  var maxVal=1;
+  data.forEach(function(d){maxVal=Math.max(maxVal,d.buy,d.sell,Math.abs(d.cf));});
+  var H=90; // px
   data.forEach(function(d){
-    var wrap=document.createElement('div'); wrap.className='chart-bar-wrap';
-    var bh=Math.max(2,Math.round((d.buy/maxVal)*72));
-    var sh=Math.max(2,Math.round((d.sell/maxVal)*72));
-    var inner=document.createElement('div'); inner.style.cssText='display:flex;align-items:flex-end;gap:2px;height:72px;width:100%;';
-    var bb=document.createElement('div'); bb.className='chart-bar buy-bar'; bb.style.height=bh+'px'; bb.style.flex='1';
-    var sb=document.createElement('div'); sb.className='chart-bar sell-bar'; sb.style.height=sh+'px'; sb.style.flex='1';
-    inner.appendChild(bb); inner.appendChild(sb);
+    var grp=document.createElement('div'); grp.className='chart-bar-group';
+    // 金額ラベル（小さく）
+    var vl=document.createElement('div'); vl.className='chart-val-label';
+    vl.textContent=d.sell>0?'¥'+(d.sell/10000).toFixed(1)+'万':'';
+    // バー
+    var pair=document.createElement('div'); pair.className='chart-bar-pair';
+    var bh=Math.max(3,Math.round((d.buy/maxVal)*H));
+    var sh=Math.max(3,Math.round((d.sell/maxVal)*H));
+    var bb=document.createElement('div'); bb.className='chart-bar buy-bar'; bb.style.height=bh+'px';
+    var sb=document.createElement('div'); sb.className='chart-bar sell-bar'; sb.style.height=sh+'px';
+    pair.appendChild(bb); pair.appendChild(sb);
+    // 月ラベル
     var lbl=document.createElement('div'); lbl.className='chart-month-label'; lbl.textContent=d.label;
-    wrap.appendChild(inner); wrap.appendChild(lbl);
-    bars.appendChild(wrap);
+    grp.appendChild(vl); grp.appendChild(pair); grp.appendChild(lbl);
+    container.appendChild(grp);
   });
 }
 
