@@ -408,8 +408,8 @@ table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:70
 var GAS_URL='https://script.google.com/macros/s/AKfycby_OHD59MqabF1jrhHMP5yaj2ExPsJ28nQisyRoEhslqExdtKl-PB_JKkrjzFS4T8yt/exec';
 var mode='buy', platform='カードショップ', records=[], currentFilter='all', shopHistory=[], stockFilter='all';
 var currentMonth=new Date().getMonth(), currentYear=new Date().getFullYear();
-var CATEGORIES=['ポケモンカード','遊戯王','ワンピース','デュエマ','MTG','ヴァンガード','ヴァイスシュヴァルツ','バトルスピリッツ','UNION ARENA','その他'];
-var PLATFORMS={buy:['カードショップ','Amazon','メルカリ','ヤフオク','その他通販','直接購入'],sell:['Amazon','メルカリ','ヤフオク','買取業者','カードラッシュ','トレトク','その他']};
+var CATEGORIES=['MTG','UNION ARENA','ヴァイスシュヴァルツ','ヴァンガード','ウォーハンマー','ワンピース','遊戯王','デュエマ','バトルスピリッツ','ポケモンカード','その他'];
+var PLATFORMS={buy:['Amazon','カードショップ','その他通販','直接購入','ヤフオク','メルカリ'],sell:['Amazon','カードラッシュ','その他','トレトク','買取業者','ヤフオク','メルカリ']};
 var FIELDS={
   buy:[
     {key:'date',label:'仕入日',type:'date',full:false,skippable:false},
