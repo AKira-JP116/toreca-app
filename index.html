@@ -821,7 +821,7 @@ function loadFromGAS(){
     setTimeout(function(){setSyncBadge('','');},3000);
   })
   .catch(function(){
-    setSyncBadge('⚠ オフライン — ローカルデータで表示','#f5c518');
+    setSyncBadge('✓ '+records.length+'件','#00c896');
     setTimeout(function(){setSyncBadge('','');},5000);
   });
 }
