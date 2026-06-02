@@ -330,31 +330,37 @@ table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:70
       <div class="month-label" id="monthLabel"></div>
       <button class="month-nav" onclick="changeMonth(1)">›</button>
     </div>
+    <div style="font-size:11px;font-weight:700;color:#38bdf8;font-family:'DM Mono',monospace;margin-bottom:8px;">📅 月間</div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-card-label">月間仕入れ金額</div>
+        <div class="stat-card-label">仕入金額</div>
         <div class="stat-card-val buy" id="statBuy">¥0</div>
         <div class="stat-card-sub" id="statBuyCnt">0件</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">月間販売金額</div>
+        <div class="stat-card-label">販売金額</div>
         <div class="stat-card-val sell" id="statSell">¥0</div>
         <div class="stat-card-sub" id="statSellCnt">0件</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">月間粗利</div>
+        <div class="stat-card-label">粗利（販売−仕入）</div>
         <div class="stat-card-val profit" id="statProfit">¥0</div>
         <div class="stat-card-sub" id="statMargin">利益率 -</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">純利益（粗利−手数料−送料−梱包）</div>
+        <div class="stat-card-val" id="statNet" style="color:#34d399;">¥0</div>
+        <div class="stat-card-sub" id="statNetSub">手数料 ¥0　送料 ¥0　梱包 ¥0</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-label">月末在庫金額（推定）</div>
         <div class="stat-card-val stock" id="statStock">¥0</div>
         <div class="stat-card-sub" id="statStockCnt">残 0点</div>
       </div>
-      <div class="stat-card full">
-        <div class="stat-card-label">月末手元残高（累計販売収入 − 累計仕入支出）</div>
+      <div class="stat-card">
+        <div class="stat-card-label">月末手元残高（累計純利益）</div>
         <div class="stat-card-val" id="statCF">¥0</div>
-        <div class="stat-card-sub" id="statCFSub">累計販売 ¥0　累計仕入 ¥0　当月CF ¥0</div>
+        <div class="stat-card-sub" id="statCFSub">累計販売 ¥0　累計仕入 ¥0　累計経費 ¥0</div>
       </div>
     </div>
     <div class="monthly-chart">
