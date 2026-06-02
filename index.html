@@ -409,7 +409,7 @@ var FIELDS={
     {key:'category',label:'カテゴリ',type:'sel',full:false,skippable:false},
     {key:'qty',label:'販売数量',type:'number',full:false,skippable:false},
     {key:'price',label:'販売価格（円）',type:'number',full:false,skippable:false,labelAlt:{'買取業者':'買取金額（円）'}},
-    {key:'fee',label:'手数料（円）',type:'number',full:false,skippable:true,labelAlt:{'買取業者':'査定手数料（円）'}},
+    
     {key:'shipping',label:'送料（円）',type:'number',full:false,skippable:true},
     {key:'packing',label:'梱包費（円）',type:'number',full:false,skippable:true},
     {key:'cost',label:'仕入原価（円）',type:'number',full:false,skippable:true},
@@ -728,7 +728,10 @@ function addRecord(){
   if(document.getElementById('addBtn').disabled)return;
   var obj={type:mode,platform:platform||'不明'};
   FIELDS[mode].forEach(function(f){var id=f.type==='shop'?'f_shop':f.type==='item'?'f_item':'f_'+f.key;var el=document.getElementById(id);if(!el)return;obj[f.key]=f.type==='number'?(parseFloat(el.value)||0):el.value;});
-  if(mode==='sell'){var rem=getStockOf(obj.item);if(rem!==Infinity&&(parseFloat(obj.qty)||1)>rem){checkStockAlert(obj.item,obj.qty);return;}}
+  if(mode==='sell'){
+    obj.fee=Math.round((obj.price||0)*0.1); // 手数料は販売価格の10%
+    var rem=getStockOf(obj.item);if(rem!==Infinity&&(parseFloat(obj.qty)||1)>rem){checkStockAlert(obj.item,obj.qty);return;}
+  }
   if(obj.shop&&obj.shop.trim()&&shopHistory.indexOf(obj.shop.trim())===-1)shopHistory.push(obj.shop.trim());
   obj._localId=Date.now();
   records.push(obj);
@@ -908,7 +911,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── 一括編集 ──────────────────────────────────────────────
 var bulkType='buy';
 var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
-var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'fee',label:'手数料',type:'number',w:'70px'},{key:'cost',label:'仕入原価',type:'number',w:'70px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'cost',label:'仕入原価',type:'number',w:'70px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
 
 function setBulkType(t){
   bulkType=t;
@@ -984,6 +987,15 @@ function bulkSave(){
       r[col]=colDef&&colDef.type==='number'?(parseFloat(inp.value)||0):inp.value;
     });
   });
+  // 販売レコードの手数料を自動計算
+  if(bulkType==='sell'){
+    rows.forEach(function(row){
+      var idx=parseInt(row.dataset.idx);
+      if(isNaN(idx)||idx<0||idx>=records.length)return;
+      var r=records[idx];
+      if(r.type==='sell') r.fee=Math.round((r.price||0)*0.1);
+    });
+  }
   renderRecords();updateSummary();
   setSyncBadge('✓ 保存済み','#00c896');
   setTimeout(function(){setSyncBadge('','');},2000);
