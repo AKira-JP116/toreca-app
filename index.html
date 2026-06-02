@@ -3,622 +3,531 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>トレカ収支 自動入力</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>トレカ収支DB</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--border:#2e2e2e;--y:#f5c518;--g:#00c896;--p:#a78bfa;--text:#f0f0f0;--muted:#777;--danger:#ff4d4d;--r:12px;--accent:#f5c518;}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;min-height:100vh;}
-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:32px;height:32px;background:var(--y);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
-.logo-text{font-size:14px;font-weight:900;}
-.logo-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
-.hbtn{background:var(--g);color:#000;border:none;border-radius:8px;padding:8px 16px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s;}
-.hbtn:hover{opacity:.85;}.hbtn:disabled{opacity:.35;cursor:default;}
-main{padding:24px;max-width:820px;margin:0 auto;}
-.mode-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.mtab{flex:1;padding:13px 0;background:var(--surface);color:var(--muted);font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
-.mtab:not(:last-child){border-right:1px solid var(--border);}
-.mtab.act-buy{background:rgba(245,197,24,.1);color:var(--y);}
-.mtab.act-sell{background:rgba(0,200,150,.1);color:var(--g);}
-.platform-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
-.pchip{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Zen Kaku Gothic New',sans-serif;}
-.pchip:hover{border-color:var(--accent);color:var(--accent);}
-.pchip.sel{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.05);}
-.method-row{display:flex;gap:8px;margin-bottom:18px;}
-.mbtn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
-.mbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.04);}
-.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;background:var(--surface);margin-bottom:16px;transition:all .2s;}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--surface2);}
-.upload-zone .uicon{font-size:36px;margin-bottom:10px;}
-.upload-zone h3{font-size:15px;font-weight:700;margin-bottom:5px;}
-.upload-zone p{font-size:12px;color:var(--muted);}
-.upload-zone input{display:none;}
-.preview-wrap{position:relative;border-radius:var(--r);overflow:hidden;margin-bottom:16px;display:none;}
-.preview-wrap.show{display:block;}
-.preview-wrap img{width:100%;max-height:240px;object-fit:contain;background:#111;display:block;}
-.prev-rm{position:absolute;top:8px;right:8px;width:26px;height:26px;background:rgba(0,0,0,.75);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
-.ai-btn{width:100%;padding:13px;border:none;border-radius:var(--r);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s;}
-.ai-btn:disabled{opacity:.35;cursor:default;}
-.ai-btn.buy{background:var(--y);color:#000;}
-.ai-btn.sell{background:var(--g);color:#000;}
-.spinner{width:17px;height:17px;border:2.5px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;display:none;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;display:none;animation:fadeUp .25s ease;}
-.form-panel.show{display:block;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
-.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.panel-label{font-size:12px;font-weight:700;color:var(--muted);font-family:'DM Mono',monospace;}
-.plat-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;}
-.pb-buy{background:rgba(245,197,24,.15);color:var(--y);}
-.pb-sell{background:rgba(0,200,150,.15);color:var(--g);}
-.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.fi{display:flex;flex-direction:column;gap:4px;}
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --buy: #58a6ff;
+  --sell: #3fb950;
+  --profit: #e3b341;
+  --danger: #f85149;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --dim: #484f58;
+  --r: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;}
+
+header{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;height:52px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;letter-spacing:-0.5px;}
+.logo b{color:var(--buy);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);margin-left:auto;transition:.3s;}
+.dot.ok{background:var(--sell);box-shadow:0 0 6px var(--sell);}
+.dot.ng{background:var(--danger);}
+
+nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
+.tab{flex:1;padding:11px 6px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;user-select:none;}
+.tab.on{color:var(--text);border-bottom-color:var(--buy);}
+.tab[data-t=sell].on{border-bottom-color:var(--sell);}
+.tab[data-t=cfg].on{border-bottom-color:var(--dim);}
+
+main{max-width:860px;margin:0 auto;padding:14px;}
+.pg{display:none;}.pg.on{display:block;}
+
+/* summary */
+.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+@media(min-width:480px){.sg{grid-template-columns:repeat(4,1fr);}}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.sl{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.sv{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;}
+.sv.b{color:var(--buy);}.sv.s{color:var(--sell);}.sv.p{color:var(--profit);}
+
+/* form */
+.fc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px;}
+.ft{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(min-width:560px){.fg{grid-template-columns:repeat(3,1fr);}}
+.fi{display:flex;flex-direction:column;gap:3px;}
 .fi.full{grid-column:1/-1;}
-.fi label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px;}
-.fi-inner{display:flex;gap:6px;align-items:center;}
-.fi input,.fi select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 11px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;outline:none;transition:border-color .15s;min-width:0;}
-.fi input:focus,.fi select:focus{border-color:var(--accent);}
-.fi select option{background:#222;}
-/* shop combo */
-.shop-wrap{position:relative;flex:1;min-width:0;}
-.shop-wrap input{width:100%;}
-.shop-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:50;overflow:hidden;display:none;max-height:180px;overflow-y:auto;}
-.shop-dropdown.open{display:block;}
-.shop-opt{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.shop-opt:hover{background:var(--surface);}
-.shop-opt-name{flex:1;}
-.shop-opt-del{font-size:11px;color:var(--muted);padding:2px 5px;border-radius:4px;border:none;background:transparent;cursor:pointer;flex-shrink:0;}
-.shop-opt-del:hover{color:var(--danger);}
-.shop-new-badge{font-size:10px;color:var(--accent);font-family:'DM Mono',monospace;}
-.skip-btn{flex-shrink:0;padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;white-space:nowrap;font-family:'DM Mono',monospace;transition:all .15s;}
-.skip-btn:hover{border-color:var(--muted);color:var(--text);}
-.skip-btn.skipped{background:rgba(255,255,255,.04);}
-.default-badge{font-size:10px;background:rgba(245,197,24,.12);color:var(--y);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;}
-.auto-hint{font-size:10px;color:#555;font-family:'DM Mono',monospace;margin-top:2px;}
-.add-btn{width:100%;padding:11px;border-radius:var(--r);font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;}
-.add-btn.buy{border:1.5px solid var(--y);background:transparent;color:var(--y);}
-.add-btn.buy:hover{background:rgba(245,197,24,.08);}
-.add-btn.sell{border:1.5px solid var(--g);background:transparent;color:var(--g);}
-.add-btn.sell:hover{background:rgba(0,200,150,.08);}
-.error-msg{background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#ff8888;margin-bottom:12px;display:none;}
-.divider{height:1px;background:var(--border);margin:24px 0;}
-.rec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.rec-title{font-size:14px;font-weight:900;}
-.rec-cnt{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
-.rec-filters{display:flex;gap:6px;margin-bottom:12px;}
-.rfil{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
-.rfil.on{border-color:var(--accent);color:var(--accent);}
-.rec-list{display:flex;flex-direction:column;gap:5px;}
-.rec-item{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 13px;gap:10px;animation:fadeUp .2s;}
-.rtype{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
-.rtype.buy{background:rgba(245,197,24,.12);}
-.rtype.sell{background:rgba(0,200,150,.12);}
-.rname{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.rplat{font-size:11px;color:var(--muted);white-space:nowrap;}
-.ramnt{font-family:'DM Mono',monospace;font-size:13px;white-space:nowrap;}
-.ramnt.buy{color:var(--y);}.ramnt.sell{color:var(--g);}
-.rdate{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
-.rdel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;flex-shrink:0;}
-.rdel:hover{color:var(--danger);}
-.empty{text-align:center;padding:36px 0;color:var(--muted);font-size:13px;}
-.empty-big{font-size:30px;margin-bottom:8px;}
-.summary-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:none;}
-.summary-bar.show{display:flex;gap:24px;flex-wrap:wrap;}
-.sitem{display:flex;flex-direction:column;gap:2px;}
-.slabel{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
-.sval{font-size:16px;font-weight:900;font-family:'DM Mono',monospace;}
-.sval.buy{color:var(--y);}.sval.sell{color:var(--g);}.sval.profit{color:#a78bfa;}
-@media(max-width:520px){.fgrid{grid-template-columns:1fr;}main{padding:14px;}header{padding:12px 14px;}.summary-bar.show{gap:14px;}}
+label{font-size:11px;color:var(--muted);}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 9px;font-size:14px;font-family:'Noto Sans JP',sans-serif;width:100%;outline:none;-webkit-appearance:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--buy);}
+textarea{resize:vertical;min-height:54px;}
+.fa{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans JP',sans-serif;transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.bb{background:var(--buy);color:#0d1117;}
+.bs{background:var(--sell);color:#0d1117;}
+.bg{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:7px 12px;}
+.bd{background:var(--danger);color:#fff;font-size:11px;padding:4px 9px;}
+
+/* list */
+.lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.lt{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.lc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+.rl{display:flex;flex-direction:column;gap:7px;}
+
+.rc{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:var(--r);padding:11px 13px;display:grid;grid-template-columns:1fr auto;gap:5px;animation:fi .18s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+.rc.buy{border-left-color:var(--buy);}
+.rc.sell{border-left-color:var(--sell);}
+.rn{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rm{font-size:11px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.rp{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:right;}
+.rp.b{color:var(--buy);}.rp.s{color:var(--sell);}
+.rd{font-size:11px;color:var(--muted);text-align:right;margin-top:1px;}
+.ra{margin-top:5px;text-align:right;}
+
+.badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;}
+.bp{background:#1f3250;color:var(--buy);}
+.bs2{background:#1a3828;color:var(--sell);}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+
+/* toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 18px;font-size:13px;z-index:999;transition:transform .25s cubic-bezier(.22,1,.36,1);white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:var(--sell);}
+#toast.ng{border-color:var(--danger);}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#0d1117;border-radius:50%;animation:sp .5s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* cfg */
+.cfc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px;}
+.cu{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:10px;}
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);overflow-x:auto;margin-top:8px;white-space:pre-wrap;word-break:break-all;}
 </style>
 </head>
 <body>
+
 <header>
-  <div class="logo">
-    <div class="logo-icon">🃏</div>
-    <div><div class="logo-text">トレカ収支 AI入力</div><div class="logo-sub">photo → data → xlsx</div></div>
-  </div>
-  <button class="hbtn" id="exportBtn" disabled onclick="exportExcel()">⬇ Excel出力</button>
+  <div class="logo">トレカ<b>DB</b></div>
+  <div id="dot" class="dot" title="接続状態"></div>
 </header>
+
+<nav>
+  <div class="tab on" data-t="home">📊 ホーム</div>
+  <div class="tab" data-t="buy">📥 仕入れ</div>
+  <div class="tab" data-t="sell">📤 販売</div>
+  <div class="tab" data-t="cfg">⚙️ 設定</div>
+</nav>
+
 <main>
-  <div class="mode-tabs">
-    <button class="mtab act-buy" id="mtBuy" onclick="setMode('buy')">🃏 仕入れ記録</button>
-    <button class="mtab" id="mtSell" onclick="setMode('sell')">💴 販売記録</button>
+
+<!-- HOME -->
+<div id="pg-home" class="pg on">
+  <div class="sg">
+    <div class="sc"><div class="sl">総仕入額</div><div class="sv b" id="s-buy">¥—</div></div>
+    <div class="sc"><div class="sl">総販売額</div><div class="sv s" id="s-sell">¥—</div></div>
+    <div class="sc"><div class="sl">純利益</div><div class="sv p" id="s-profit">¥—</div></div>
+    <div class="sc"><div class="sl">利益率</div><div class="sv p" id="s-margin">—%</div></div>
   </div>
-  <div class="platform-row" id="platformRow"></div>
-  <div class="method-row">
-    <button class="mbtn active" id="mPhoto" onclick="setMethod('photo')">📷 写真から自動入力</button>
-    <button class="mbtn" id="mManual" onclick="setMethod('manual')">✏️ 手入力</button>
-  </div>
-  <div class="upload-zone" id="uploadZone">
-    <div class="uicon" id="uIcon">📷</div>
-    <h3 id="uTitle">写真をドロップ、またはタップして選択</h3>
-    <p id="uSub">領収書・注文画面のスクショをアップロード</p>
-    <p style="font-size:11px;color:#555;margin-top:6px;font-family:'DM Mono',monospace;">JPG / PNG / HEIC</p>
-    <input type="file" id="fileInput" accept="image/*" capture="environment">
-  </div>
-  <div class="preview-wrap" id="previewWrap">
-    <img id="previewImg" src="" alt="preview">
-    <button class="prev-rm" onclick="clearImage()">✕</button>
-  </div>
-  <div class="error-msg" id="errorMsg"></div>
-  <button class="ai-btn buy" id="aiBtn" disabled onclick="analyze()">
-    <span class="spinner" id="spinner"></span>
-    <span id="aiBtnTxt">📸 AIで自動読み取り</span>
-  </button>
-  <div class="form-panel" id="formPanel">
-    <div class="panel-header">
-      <span class="panel-label" id="panelLabel">手入力フォーム</span>
-      <span class="plat-badge pb-buy" id="platBadge">カードショップ 仕入れ</span>
+  <div class="lh"><div class="lt">最近の記録</div><div class="lc" id="h-cnt">—</div></div>
+  <div id="home-list" class="rl"><div class="empty">読み込み中…</div></div>
+</div>
+
+<!-- BUY -->
+<div id="pg-buy" class="pg">
+  <div class="fc">
+    <div class="ft">📥 仕入れ登録</div>
+    <div class="fg">
+      <div class="fi"><label>仕入日</label><input type="date" id="b-date"></div>
+      <div class="fi"><label>仕入単価 (円)</label><input type="number" id="b-price" placeholder="0"></div>
+      <div class="fi"><label>数量</label><input type="number" id="b-qty" value="1" min="1"></div>
+      <div class="fi full"><label>商品名</label><input type="text" id="b-name" placeholder="例：ポケモンカード リザードン ex SAR"></div>
+      <div class="fi"><label>プラットフォーム</label>
+        <select id="b-platform">
+          <option>カードショップ</option><option>メルカリ</option><option>ヤフオク</option>
+          <option>ラクマ</option><option>フリマ</option><option>開封</option><option>その他</option>
+        </select>
+      </div>
+      <div class="fi"><label>仕入先</label><input type="text" id="b-src" placeholder="例：トレカチャンピ"></div>
+      <div class="fi full"><label>メモ</label><textarea id="b-memo" placeholder="任意"></textarea></div>
     </div>
-    <div class="fgrid" id="fieldGrid"></div>
-    <button class="add-btn buy" id="addBtn" onclick="addRecord()">✓ 記録に追加</button>
+    <div class="fa">
+      <button class="btn bb" id="b-btn" onclick="submitBuy()">📥 登録する</button>
+      <button class="btn bg" onclick="clearBuy()">クリア</button>
+    </div>
   </div>
-  <div class="divider"></div>
-  <div class="summary-bar" id="summaryBar">
-    <div class="sitem"><span class="slabel">仕入合計</span><span class="sval buy" id="sBuy">¥0</span></div>
-    <div class="sitem"><span class="slabel">販売合計</span><span class="sval sell" id="sSell">¥0</span></div>
-    <div class="sitem"><span class="slabel">粗利（概算）</span><span class="sval profit" id="sProfit">¥0</span></div>
+  <div class="lh"><div class="lt">仕入れ履歴</div><div class="lc" id="buy-cnt">—件</div></div>
+  <div id="buy-list" class="rl"><div class="empty">記録なし</div></div>
+</div>
+
+<!-- SELL -->
+<div id="pg-sell" class="pg">
+  <div class="fc">
+    <div class="ft">📤 販売登録</div>
+    <div class="fg">
+      <div class="fi"><label>販売日</label><input type="date" id="s-date"></div>
+      <div class="fi"><label>販売価格 (円)</label><input type="number" id="s-price" placeholder="0"></div>
+      <div class="fi"><label>数量</label><input type="number" id="s-qty" value="1" min="1"></div>
+      <div class="fi full"><label>商品名</label><input type="text" id="s-name" placeholder="例：ポケモンカード リザードン ex SAR"></div>
+      <div class="fi"><label>プラットフォーム</label>
+        <select id="s-platform">
+          <option>メルカリ</option><option>ヤフオク</option><option>ラクマ</option>
+          <option>カードショップ</option><option>その他</option>
+        </select>
+      </div>
+      <div class="fi"><label>注文ID</label><input type="text" id="s-orderid" placeholder="任意"></div>
+      <div class="fi"><label>手数料 (円)</label><input type="number" id="s-fee" placeholder="0" value="0"></div>
+      <div class="fi"><label>送料 (円)</label><input type="number" id="s-ship" placeholder="0" value="0"></div>
+      <div class="fi"><label>梱包費 (円)</label><input type="number" id="s-pack" placeholder="0" value="0"></div>
+      <div class="fi"><label>仕入原価 (円)</label><input type="number" id="s-cost" placeholder="0" value="0"></div>
+      <div class="fi full"><label>メモ</label><textarea id="s-memo" placeholder="任意"></textarea></div>
+    </div>
+    <div id="s-profit-preview" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--profit);margin-top:10px;min-height:20px;"></div>
+    <div class="fa">
+      <button class="btn bs" id="s-btn" onclick="submitSell()">📤 登録する</button>
+      <button class="btn bg" onclick="clearSell()">クリア</button>
+    </div>
   </div>
-  <div class="rec-hdr">
-    <span class="rec-title">記録済みデータ</span>
-    <span class="rec-cnt" id="recCnt">0件</span>
+  <div class="lh"><div class="lt">販売履歴</div><div class="lc" id="sell-cnt">—件</div></div>
+  <div id="sell-list" class="rl"><div class="empty">記録なし</div></div>
+</div>
+
+<!-- CFG -->
+<div id="pg-cfg" class="pg">
+  <div class="cfc">
+    <div class="ft">Apps Script URL</div>
+    <div class="cu">デプロイ済みのウェブアプリURLを入力してください。</div>
+    <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/..." style="margin-bottom:10px;">
+    <div class="fa">
+      <button class="btn bb" onclick="saveUrl()">保存 & 接続テスト</button>
+      <button class="btn bg" onclick="clearUrl()">クリア</button>
+    </div>
+    <div id="url-msg" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
   </div>
-  <div class="rec-filters">
-    <button class="rfil on" onclick="setFilter('all',this)">すべて</button>
-    <button class="rfil" onclick="setFilter('buy',this)">🃏 仕入れ</button>
-    <button class="rfil" onclick="setFilter('sell',this)">💴 販売</button>
+
+  <div class="cfc">
+    <div class="ft">Apps Script コード</div>
+    <div class="cu">
+      スプレッドシート →「拡張機能」→「Apps Script」に貼り付けて保存。<br>
+      その後「デプロイ」→「新しいデプロイ」→ 種類：<b>ウェブアプリ</b> → アクセス：<b>全員</b>
+    </div>
+    <button class="btn bg" onclick="copyCode()">📋 コードをコピー</button>
+    <div id="copy-msg" style="margin-top:6px;font-size:11px;color:var(--sell);"></div>
   </div>
-  <div class="rec-list" id="recList">
-    <div class="empty"><div class="empty-big">📋</div>まだ記録がありません</div>
-  </div>
+</div>
+
 </main>
+<div id="toast"></div>
+
 <script>
-var mode='buy', method='manual', platform='カードショップ', imgBase64=null, records=[], currentFilter='all';
+const SS_ID = '1imNBEI38cGKwg1hIm2qr1Pq4LJKVd4MlweJGmRZ0PGc';
+const KEY = 'toreca_gas_url';
+let GAS = 'https://script.google.com/macros/s/AKfycbyK4zQgYpn2vcdiSkUWbTKMMmzGtwAY_bpAW6xoeCAR4XcRtYUWNTTX-eUqfwwR2Md-/exec';
+let BD = [], SD = [];
 
-// ── カテゴリ ──────────────────────────────────────────────
-var CATEGORIES = [
-  'ポケモンカード','遊戯王','ワンピース','デュエマ','MTG',
-  'ヴァンガード','ヴァイスシュヴァルツ','バトルスピリッツ','UNION ARENA','その他'
-];
+// ── init ──
+addEventListener('DOMContentLoaded', () => {
+  today('b-date'); today('s-date');
+  initTabs();
+  calcProfit();
+  ['s-price','s-fee','s-ship','s-pack','s-cost'].forEach(id =>
+    document.getElementById(id).addEventListener('input', calcProfit));
+  document.getElementById('gas-url').value = GAS;
+  loadAll();
+});
 
-// ── プラットフォーム ──────────────────────────────────────
-var PLATFORMS = {
-  buy:  ['カードショップ','Amazon','メルカリ','ヤフオク','その他通販','直接購入'],
-  sell: ['Amazon','メルカリ','ヤフオク','カードラッシュ','トレトク','その他']
-};
-
-// ── 店名履歴（セッション内で保持） ──────────────────────
-var shopHistory = [];
-
-function addShopHistory(name) {
-  name = name.trim();
-  if (!name || shopHistory.indexOf(name) !== -1) return;
-  shopHistory.push(name);
-}
-function removeShopHistory(name) {
-  shopHistory = shopHistory.filter(function(s){ return s !== name; });
+function today(id) {
+  document.getElementById(id).value = new Date().toISOString().slice(0,10);
 }
 
-// ── フィールド定義 ────────────────────────────────────────
-var FIELDS = {
-  buy: [
-    {key:'date',      label:'仕入日',           type:'date',   full:false, skippable:false},
-    {key:'shop',      label:'仕入先・店名',       type:'shop',   full:false, skippable:true, isDefault:true},
-    {key:'item',      label:'商品名（カード名）',  type:'text',   full:true,  skippable:false},
-    {key:'category',  label:'カテゴリ',           type:'sel',    full:false, skippable:false},
-    {key:'unit_price',label:'仕入単価（円）',      type:'number', full:false, skippable:true},
-    {key:'qty',       label:'数量',               type:'number', full:false, skippable:false},
-    {key:'total',     label:'仕入合計（円）',      type:'number', full:false, skippable:false},
-    {key:'memo',      label:'メモ',               type:'text',   full:true,  skippable:true}
-  ],
-  sell: [
-    {key:'date',     label:'販売日',             type:'date',   full:false, skippable:false},
-    {key:'order_id', label:'注文ID / 取引ID',    type:'text',   full:false, skippable:true},
-    {key:'item',     label:'商品名',              type:'text',   full:true,  skippable:false},
-    {key:'category', label:'カテゴリ',            type:'sel',    full:false, skippable:false},
-    {key:'price',    label:'販売価格（円）',       type:'number', full:false, skippable:false},
-    {key:'fee',      label:'手数料（円）',         type:'number', full:false, skippable:true},
-    {key:'shipping', label:'送料（円）',           type:'number', full:false, skippable:true},
-    {key:'packing',  label:'梱包費（円）',         type:'number', full:false, skippable:true},
-    {key:'cost',     label:'仕入原価（円）',       type:'number', full:false, skippable:true},
-    {key:'memo',     label:'メモ',                type:'text',   full:true,  skippable:true}
-  ]
-};
-
-// ── 初期化 ────────────────────────────────────────────────
-setMode('buy');
-setMethod('manual');
-
-function setMode(m) {
-  mode = m;
-  var isBuy = m === 'buy';
-  document.getElementById('mtBuy').className = 'mtab' + (isBuy ? ' act-buy' : '');
-  document.getElementById('mtSell').className = 'mtab' + (!isBuy ? ' act-sell' : '');
-  document.getElementById('aiBtn').className = 'ai-btn ' + (isBuy ? 'buy' : 'sell');
-  document.documentElement.style.setProperty('--accent', isBuy ? '#f5c518' : '#00c896');
-
-  // デフォルトプラットフォーム
-  platform = isBuy ? 'カードショップ' : 'Amazon';
-
-  var row = document.getElementById('platformRow');
-  row.innerHTML = '';
-  PLATFORMS[m].forEach(function(p) {
-    var b = document.createElement('button');
-    b.className = 'pchip' + (p === platform ? ' sel' : '');
-    b.textContent = p;
-    b.onclick = function() { selectPlatform(p, b); };
-    row.appendChild(b);
-  });
-
-  updateUploadUI();
-  hideForm();
-  clearError();
-  if (method === 'manual') showManualForm();
+function calcProfit() {
+  const p = n('s-price'), fee = n('s-fee'), ship = n('s-ship'), pack = n('s-pack'), cost = n('s-cost');
+  const profit = p - fee - ship - pack - cost;
+  const el = document.getElementById('s-profit-preview');
+  if (p > 0) {
+    el.textContent = `純利益: ${profit >= 0 ? '+' : ''}¥${profit.toLocaleString('ja-JP')}`;
+    el.style.color = profit >= 0 ? 'var(--sell)' : 'var(--danger)';
+  } else {
+    el.textContent = '';
+  }
 }
 
-function selectPlatform(p, el) {
-  platform = (platform === p) ? (mode === 'buy' ? 'カードショップ' : 'Amazon') : p;
-  document.querySelectorAll('.pchip').forEach(function(c) { c.classList.remove('sel'); });
-  // 選択中のchipをハイライト
-  document.querySelectorAll('.pchip').forEach(function(c) {
-    if (c.textContent === platform) c.classList.add('sel');
-  });
-  updateUploadUI();
-  if (method === 'manual') showManualForm();
+// ── tabs ──
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+    document.querySelectorAll('.pg').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById('pg-' + t.dataset.t).classList.add('on');
+  }));
 }
 
-function setMethod(m) {
-  method = m;
-  document.getElementById('mPhoto').className = 'mbtn' + (m === 'photo' ? ' active' : '');
-  document.getElementById('mManual').className = 'mbtn' + (m === 'manual' ? ' active' : '');
-  document.getElementById('uploadZone').style.display = m === 'photo' ? '' : 'none';
-  document.getElementById('previewWrap').className = 'preview-wrap';
-  document.getElementById('aiBtn').style.display = m === 'photo' ? '' : 'none';
-  clearError();
-  if (m === 'manual') { imgBase64 = null; showManualForm(); }
-  else hideForm();
+// ── api ──
+function setDot(s) { document.getElementById('dot').className = 'dot ' + s; }
+
+async function api(params) {
+  if (!GAS) throw new Error('URL未設定');
+  const res = await fetch(GAS + '?' + new URLSearchParams(params));
+  const j = await res.json();
+  if (j.error) throw new Error(j.error);
+  return j;
 }
 
-function updateUploadUI() {
-  var isBuy = mode === 'buy';
-  document.getElementById('uIcon').textContent = isBuy ? '🧾' : '📱';
-  document.getElementById('uTitle').textContent = isBuy
-    ? '領収書・レシートをドロップ、またはタップ'
-    : '注文完了画面・取引画面のスクショをドロップ';
-  document.getElementById('uSub').textContent = platform
-    ? platform + 'の画面をアップロード'
-    : (isBuy ? '仕入れ時の領収書・レシート' : '販売プラットフォームの注文画面');
-}
-
-// ── ファイル処理 ──────────────────────────────────────────
-var zone = document.getElementById('uploadZone');
-var fileInput = document.getElementById('fileInput');
-zone.addEventListener('click', function() { fileInput.click(); });
-zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag'); });
-zone.addEventListener('dragleave', function() { zone.classList.remove('drag'); });
-zone.addEventListener('drop', function(e) { e.preventDefault(); zone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
-
-function handleFile(file) {
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(ev) {
-    var src = ev.target.result;
-    imgBase64 = src.split(',')[1];
-    document.getElementById('previewImg').src = src;
-    document.getElementById('previewWrap').classList.add('show');
-    document.getElementById('aiBtn').disabled = false;
-    hideForm(); clearError();
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearImage() {
-  imgBase64 = null; fileInput.value = '';
-  document.getElementById('previewWrap').classList.remove('show');
-  document.getElementById('previewImg').src = '';
-  document.getElementById('aiBtn').disabled = true;
-  hideForm(); clearError();
-}
-
-// ── AI読み取り ────────────────────────────────────────────
-async function analyze() {
-  if (!imgBase64) return;
-  clearError();
-  var btn = document.getElementById('aiBtn'), sp = document.getElementById('spinner'), txt = document.getElementById('aiBtnTxt');
-  btn.disabled = true; sp.style.display = 'block'; txt.textContent = 'AIが読み取り中...';
-  var today = new Date().toISOString().slice(0, 10);
-  var isBuy = mode === 'buy';
-  var platHint = platform ? 'プラットフォーム: ' + platform : '';
-  var catList = CATEGORIES.join('、');
-  var sysPrompt = isBuy
-    ? 'あなたはトレードカード仕入れ帳簿AIです。' + platHint + '。領収書・レシート画像から情報を抽出し、JSONのみを返してください（マークダウン不要）。\n形式: {"date":"YYYY-MM-DD","shop":"店名","item":"商品名","category":"カテゴリ","unit_price":数値,"qty":数値,"total":数値,"memo":""}\nカテゴリは次から選択: ' + catList + '\n不明は""か0。日付不明は"' + today + '"。'
-    : 'あなたはトレードカード販売帳簿AIです。' + platHint + 'の注文・取引画面から情報を抽出し、JSONのみを返してください（マークダウン不要）。\n形式: {"date":"YYYY-MM-DD","order_id":"","item":"商品名","category":"カテゴリ","price":数値,"fee":数値,"shipping":数値,"packing":数値,"cost":数値,"memo":""}\nカテゴリは次から選択: ' + catList + '\n手数料: Amazon≒10-15%, メルカリ≒10%, ヤフオク≒8-10%。不明は0。日付不明は"' + today + '"。';
+async function loadAll() {
+  setDot('');
   try {
-    var resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:1000, system:sysPrompt,
-        messages:[{role:"user", content:[
-          {type:"image", source:{type:"base64", media_type:"image/jpeg", data:imgBase64}},
-          {type:"text", text:"この画像から情報を抽出してJSONで返してください。"}
-        ]}]})
-    });
-    var data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-    var raw = data.content.find(function(b){return b.type==='text';}); raw = raw ? raw.text : '';
-    var clean = raw.replace(/```json|```/g, '').trim();
-    renderForm(JSON.parse(clean), false);
+    const [b, s] = await Promise.all([api({action:'getBuy'}), api({action:'getSell'})]);
+    BD = b.rows || []; SD = s.rows || [];
+    setDot('ok'); render();
+  } catch(e) { setDot('ng'); toast('読み込み失敗: ' + e.message, 'ng'); }
+}
+
+// ── render ──
+function render() {
+  renderBuy(); renderSell(); renderHome();
+}
+
+function renderHome() {
+  const tb = BD.reduce((s,r) => s + (parseFloat(r['仕入合計'])||0), 0);
+  const ts = SD.reduce((s,r) => s + (parseFloat(r['販売価格'])||0), 0);
+  const tp = SD.reduce((s,r) => s + (parseFloat(r['純利益'])||0), 0);
+  const mg = ts > 0 ? (tp/ts*100).toFixed(1) : '—';
+  set('s-buy', '¥' + fmt(tb));
+  set('s-sell', '¥' + fmt(ts));
+  set('s-profit', (tp>=0?'+':'') + '¥' + fmt(tp));
+  set('s-margin', mg === '—' ? '—%' : (tp>=0?'+':'') + mg + '%');
+
+  const all = [
+    ...BD.map(r => ({...r, _t:'buy', _d:r['仕入日']})),
+    ...SD.map(r => ({...r, _t:'sell', _d:r['販売日']}))
+  ].sort((a,b) => b['登録日時'] > a['登録日時'] ? 1 : -1).slice(0,12);
+
+  set('h-cnt', (BD.length+SD.length) + '件');
+  document.getElementById('home-list').innerHTML = all.length
+    ? all.map(r => cardHtml(r)).join('')
+    : '<div class="empty">記録がありません</div>';
+}
+
+function renderBuy() {
+  set('buy-cnt', BD.length + '件');
+  document.getElementById('buy-list').innerHTML = BD.length
+    ? [...BD].reverse().map(r => cardHtml({...r, _t:'buy'})).join('')
+    : '<div class="empty">仕入れ記録なし</div>';
+}
+
+function renderSell() {
+  set('sell-cnt', SD.length + '件');
+  document.getElementById('sell-list').innerHTML = SD.length
+    ? [...SD].reverse().map(r => cardHtml({...r, _t:'sell'})).join('')
+    : '<div class="empty">販売記録なし</div>';
+}
+
+function cardHtml(r) {
+  const isBuy = r._t === 'buy';
+  const price = isBuy ? r['仕入合計'] : r['販売価格'];
+  const sub   = isBuy ? r['仕入先']   : r['プラットフォーム'];
+  const date  = isBuy ? r['仕入日']   : r['販売日'];
+  const profit = !isBuy && r['純利益'] !== undefined
+    ? `<span style="color:${parseFloat(r['純利益'])>=0?'var(--sell)':'var(--danger)'}">${parseFloat(r['純利益'])>=0?'+':''}¥${fmt(r['純利益'])}</span>` : '';
+  return `<div class="rc ${isBuy?'buy':'sell'}">
+    <div>
+      <div class="rn">${esc(r['商品名']||'—')}</div>
+      <div class="rm">
+        <span class="badge ${isBuy?'bp':'bs2'}">${isBuy?'仕入':'販売'}</span>
+        ${esc(sub||'')}
+        ${r['数量']>1?`<span>×${r['数量']}</span>`:''}
+        ${profit}
+      </div>
+    </div>
+    <div>
+      <div class="rp ${isBuy?'b':'s'}">¥${fmt(price)}</div>
+      <div class="rd">${fmtD(date)}</div>
+      <div class="ra"><button class="btn bd" onclick="del('${r._t}','${r._row}')">削除</button></div>
+    </div>
+  </div>`;
+}
+
+// ── submit ──
+async function submitBuy() {
+  const name = document.getElementById('b-name').value.trim();
+  const price = n('b-price'), qty = n('b-qty') || 1;
+  const date = document.getElementById('b-date').value;
+  if (!name || !price || !date) { toast('商品名・日付・仕入単価は必須', 'ng'); return; }
+  const now = new Date().toLocaleString('ja-JP');
+  const data = {
+    date, name, price, qty,
+    total: price * qty,
+    platform: document.getElementById('b-platform').value,
+    src: document.getElementById('b-src').value,
+    memo: document.getElementById('b-memo').value,
+    now
+  };
+  setBusy('b-btn', true);
+  try {
+    await api({action:'addBuy', data: JSON.stringify(data)});
+    toast('仕入れを登録しました ✓', 'ok');
+    clearBuy();
+    await loadAll();
+  } catch(e) { toast('失敗: ' + e.message, 'ng'); }
+  setBusy('b-btn', false, '📥 登録する');
+}
+
+async function submitSell() {
+  const name = document.getElementById('s-name').value.trim();
+  const price = n('s-price');
+  const date = document.getElementById('s-date').value;
+  if (!name || !price || !date) { toast('商品名・日付・販売価格は必須', 'ng'); return; }
+  const fee = n('s-fee'), ship = n('s-ship'), pack = n('s-pack'), cost = n('s-cost');
+  const qty = n('s-qty') || 1;
+  const now = new Date().toLocaleString('ja-JP');
+  const data = {
+    date, name, price, qty,
+    platform: document.getElementById('s-platform').value,
+    orderid: document.getElementById('s-orderid').value,
+    fee, ship, pack, cost,
+    profit: price - fee - ship - pack - cost,
+    memo: document.getElementById('s-memo').value,
+    now
+  };
+  setBusy('s-btn', true);
+  try {
+    await api({action:'addSell', data: JSON.stringify(data)});
+    toast('販売を登録しました ✓', 'ok');
+    clearSell();
+    await loadAll();
+  } catch(e) { toast('失敗: ' + e.message, 'ng'); }
+  setBusy('s-btn', false, '📤 登録する');
+}
+
+async function del(type, row) {
+  if (!confirm('削除しますか？')) return;
+  try {
+    await api({action:'deleteRow', sheet: type==='buy'?'仕入台帳':'販売台帳', row});
+    toast('削除しました', 'ok');
+    await loadAll();
+  } catch(e) { toast('削除失敗: ' + e.message, 'ng'); }
+}
+
+// ── settings ──
+async function saveUrl() {
+  GAS = document.getElementById('gas-url').value.trim();
+  if (!GAS) { toast('URLを入力してください', 'ng'); return; }
+  localStorage.setItem(KEY, GAS);
+  set('url-msg', '接続テスト中…');
+  try {
+    await loadAll();
+    set('url-msg', '✅ 接続成功！');
   } catch(e) {
-    showError('読み取りに失敗しました。画像が不鮮明な場合は撮り直してみてください（' + e.message + '）');
-  } finally {
-    btn.disabled = false; sp.style.display = 'none'; txt.textContent = '📸 AIで自動読み取り';
+    set('url-msg', '❌ 失敗: ' + e.message);
   }
 }
 
-// ── フォーム描画 ──────────────────────────────────────────
-function showManualForm() { renderForm({}, true); }
-function hideForm() { document.getElementById('formPanel').classList.remove('show'); }
+function clearUrl() {
+  GAS = ''; localStorage.removeItem(KEY);
+  document.getElementById('gas-url').value = '';
+  set('url-msg', ''); setDot('');
+}
 
-function renderForm(parsed, isManual) {
-  var isBuy = mode === 'buy';
-  document.getElementById('panelLabel').textContent = isManual
-    ? '手入力フォーム — 空欄は後から修正できます'
-    : '読み取り結果 — 確認・修正してから追加';
-  document.getElementById('platBadge').textContent = platform + (isBuy ? ' 仕入れ' : ' 販売');
-  document.getElementById('platBadge').className = 'plat-badge ' + (isBuy ? 'pb-buy' : 'pb-sell');
-  document.getElementById('addBtn').className = 'add-btn ' + (isBuy ? 'buy' : 'sell');
+function copyCode() {
+  const code = `// トレカ収支DB - Apps Script
+const SS_ID = '${SS_ID}';
+const S_BUY  = '仕入台帳';
+const S_SELL = '販売台帳';
 
-  var grid = document.getElementById('fieldGrid');
-  grid.innerHTML = '';
-  var today = new Date().toISOString().slice(0, 10);
+function doGet(e)  { return handle(e); }
+function doPost(e) { return handle(e); }
 
-  FIELDS[mode].forEach(function(f) {
-    var wrap = document.createElement('div');
-    wrap.className = 'fi' + (f.full ? ' full' : '');
-
-    // Label
-    var lbl = document.createElement('label');
-    lbl.textContent = f.label;
-    if (f.isDefault && isBuy) {
-      var db = document.createElement('span');
-      db.className = 'default-badge'; db.textContent = 'デフォルト';
-      lbl.appendChild(db);
+function handle(e) {
+  const p = e.parameter;
+  let r;
+  try {
+    switch(p.action) {
+      case 'addBuy':    r = addBuy(JSON.parse(p.data));  break;
+      case 'addSell':   r = addSell(JSON.parse(p.data)); break;
+      case 'getBuy':    r = getRows(S_BUY);              break;
+      case 'getSell':   r = getRows(S_SELL);             break;
+      case 'deleteRow': r = delRow(p.sheet, +p.row);     break;
+      default: r = {error:'unknown'};
     }
-    wrap.appendChild(lbl);
+  } catch(ex) { r = {error: ex.toString()}; }
+  return ContentService.createTextOutput(JSON.stringify(r))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
-    var inner = document.createElement('div');
-    inner.className = 'fi-inner';
+function addBuy(d) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sh = ss.getSheetByName(S_BUY);
+  const id = Date.now().toString();
+  sh.appendRow([id, d.date, d.platform, d.src, d.name, d.price, d.qty, d.total, d.memo, d.now]);
+  return {ok:true, id};
+}
 
-    // ── shop型: カスタムコンボボックス ──
-    if (f.type === 'shop') {
-      var shopWrap = document.createElement('div');
-      shopWrap.className = 'shop-wrap';
+function addSell(d) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sh = ss.getSheetByName(S_SELL);
+  const id = Date.now().toString();
+  sh.appendRow([id, d.date, d.platform, d.orderid, d.name, d.price, d.qty, d.fee, d.ship, d.pack, d.cost, d.profit, d.memo, d.now]);
+  return {ok:true, id};
+}
 
-      var inp = document.createElement('input');
-      inp.type = 'text'; inp.id = 'f_shop';
-      inp.value = parsed['shop'] || platform || '';
-      inp.placeholder = '店名を入力、または履歴から選択';
-      inp.autocomplete = 'off';
-
-      var dd = document.createElement('div');
-      dd.className = 'shop-dropdown'; dd.id = 'shopDropdown';
-
-      function refreshDropdown() {
-        dd.innerHTML = '';
-        var val = inp.value.trim().toLowerCase();
-        var filtered = shopHistory.filter(function(s) {
-          return s.toLowerCase().indexOf(val) !== -1;
-        });
-        // 入力値が履歴にない場合、新規追加の選択肢を表示
-        if (inp.value.trim() && shopHistory.indexOf(inp.value.trim()) === -1) {
-          var newOpt = document.createElement('div');
-          newOpt.className = 'shop-opt';
-          newOpt.innerHTML = '<span class="shop-opt-name">' + inp.value.trim() + '</span><span class="shop-new-badge">新規追加</span>';
-          newOpt.onmousedown = function(e) { e.preventDefault(); inp.value = inp.value.trim(); dd.classList.remove('open'); };
-          dd.appendChild(newOpt);
-        }
-        filtered.forEach(function(s) {
-          var opt = document.createElement('div');
-          opt.className = 'shop-opt';
-          var nameSpan = document.createElement('span'); nameSpan.className = 'shop-opt-name'; nameSpan.textContent = s;
-          var delBtn = document.createElement('button'); delBtn.className = 'shop-opt-del'; delBtn.textContent = '削除'; delBtn.type = 'button';
-          delBtn.onmousedown = function(e) {
-            e.preventDefault(); e.stopPropagation();
-            removeShopHistory(s); refreshDropdown();
-          };
-          opt.onmousedown = function(e) { e.preventDefault(); inp.value = s; dd.classList.remove('open'); };
-          opt.appendChild(nameSpan); opt.appendChild(delBtn);
-          dd.appendChild(opt);
-        });
-        dd.classList.toggle('open', dd.children.length > 0);
-      }
-
-      inp.addEventListener('focus', refreshDropdown);
-      inp.addEventListener('input', refreshDropdown);
-      inp.addEventListener('blur', function() { setTimeout(function(){ dd.classList.remove('open'); }, 150); });
-
-      shopWrap.appendChild(inp); shopWrap.appendChild(dd);
-      inner.appendChild(shopWrap);
-
-    // ── セレクト型 ──
-    } else if (f.type === 'sel') {
-      var el = document.createElement('select'); el.id = 'f_' + f.key;
-      CATEGORIES.forEach(function(o) {
-        var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
-        if (parsed[f.key] === o) opt.selected = true;
-        el.appendChild(opt);
-      });
-      inner.appendChild(el);
-
-    // ── 通常input ──
-    } else {
-      var el2 = document.createElement('input');
-      el2.type = f.type; el2.id = 'f_' + f.key;
-      if (f.key === 'date') el2.value = parsed[f.key] || today;
-      else if (f.type === 'number') el2.value = (parsed[f.key] !== undefined && parsed[f.key] !== 0) ? parsed[f.key] : '';
-      else el2.value = parsed[f.key] || '';
-      el2.placeholder = f.skippable ? '不明は空欄でOK' : '';
-      inner.appendChild(el2);
-    }
-
-    // スキップボタン
-    if (f.skippable) {
-      var skip = document.createElement('button');
-      skip.className = 'skip-btn'; skip.textContent = 'スキップ'; skip.type = 'button';
-      skip.onclick = function() {
-        var target = document.getElementById('f_' + f.key) || document.getElementById('f_shop');
-        if (target) target.value = '';
-        skip.classList.toggle('skipped');
-        skip.textContent = skip.classList.contains('skipped') ? '入力する' : 'スキップ';
-      };
-      inner.appendChild(skip);
-    }
-
-    wrap.appendChild(inner);
-
-    // 合計の自動計算ヒント
-    if (f.key === 'total') {
-      var hint = document.createElement('div');
-      hint.className = 'auto-hint'; hint.textContent = '単価×数量で自動計算（手動入力も可）';
-      wrap.appendChild(hint);
-      setTimeout(function() {
-        var upEl = document.getElementById('f_unit_price');
-        var qEl  = document.getElementById('f_qty');
-        var tEl  = document.getElementById('f_total');
-        if (upEl && qEl && tEl) {
-          var calc = function() { var u=parseFloat(upEl.value)||0, q=parseFloat(qEl.value)||0; if(u&&q) tEl.value=u*q; };
-          upEl.addEventListener('input', calc); qEl.addEventListener('input', calc);
-        }
-      }, 0);
-    }
-
-    grid.appendChild(wrap);
+function getRows(sheetName) {
+  const sh = SpreadsheetApp.openById(SS_ID).getSheetByName(sheetName);
+  if (!sh) return {rows:[]};
+  const vals = sh.getDataRange().getValues();
+  const hdr  = vals[0];
+  const rows = vals.slice(1).map((r,i) => {
+    const obj = {_row: i+2};
+    hdr.forEach((h,j) => obj[h] = r[j]);
+    return obj;
   });
-
-  document.getElementById('formPanel').classList.add('show');
+  return {rows};
 }
 
-// ── 記録追加 ──────────────────────────────────────────────
-function addRecord() {
-  var obj = { type: mode, platform: platform || '不明' };
-  FIELDS[mode].forEach(function(f) {
-    var id = f.type === 'shop' ? 'f_shop' : 'f_' + f.key;
-    var el = document.getElementById(id);
-    if (!el) return;
-    obj[f.key] = f.type === 'number' ? (parseFloat(el.value) || 0) : el.value;
-  });
-  // 店名を履歴に追加
-  if (obj.shop && obj.shop.trim()) addShopHistory(obj.shop.trim());
-  records.push(obj);
-  renderRecords(); hideForm(); clearImage();
-  if (method === 'manual') showManualForm();
-  document.getElementById('exportBtn').disabled = false;
-  updateSummary();
-}
-
-function removeRecord(idx) {
-  records.splice(idx, 1);
-  renderRecords(); updateSummary();
-  if (records.length === 0) document.getElementById('exportBtn').disabled = true;
-}
-
-function setFilter(f, el) {
-  currentFilter = f;
-  document.querySelectorAll('.rfil').forEach(function(b){b.classList.remove('on');});
-  el.classList.add('on'); renderRecords();
-}
-
-function renderRecords() {
-  document.getElementById('recCnt').textContent = records.length + '件';
-  var list = document.getElementById('recList');
-  var filtered = currentFilter === 'all' ? records : records.filter(function(r){return r.type===currentFilter;});
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-big">📋</div>' + (records.length ? 'フィルター条件に一致しません' : 'まだ記録がありません') + '</div>';
-    return;
-  }
-  list.innerHTML = '';
-  filtered.forEach(function(r) {
-    var isBuy = r.type === 'buy';
-    var name = r.item || '(商品名なし)';
-    var amt = isBuy
-      ? (r.total ? '¥' + Math.round(r.total).toLocaleString() : '-')
-      : (r.price ? '¥' + Math.round(r.price).toLocaleString() : '-');
-    var idx = records.indexOf(r);
-    var div = document.createElement('div'); div.className = 'rec-item';
-    div.innerHTML = '<div class="rtype '+(isBuy?'buy':'sell')+'">'+(isBuy?'🃏':'💴')+'</div>'
-      +'<div class="rname">'+name+'</div>'
-      +'<div class="rplat">'+(r.platform||'')+'</div>'
-      +'<div class="ramnt '+(isBuy?'buy':'sell')+'">'+amt+'</div>'
-      +'<div class="rdate">'+(r.date||'-')+'</div>'
-      +'<button class="rdel" onclick="removeRecord('+idx+')">✕</button>';
-    list.appendChild(div);
+function delRow(sheetName, row) {
+  SpreadsheetApp.openById(SS_ID).getSheetByName(sheetName).deleteRow(row);
+  return {ok:true};
+}`;
+  navigator.clipboard.writeText(code).then(() => {
+    set('copy-msg', '✅ コピーしました！Apps Scriptに貼り付けてください。');
+    setTimeout(() => set('copy-msg',''), 4000);
   });
 }
 
-function updateSummary() {
-  var buyT  = records.filter(function(r){return r.type==='buy';}).reduce(function(s,r){return s+(r.total||0);},0);
-  var sellT = records.filter(function(r){return r.type==='sell';}).reduce(function(s,r){return s+(r.price||0);},0);
-  var profit = sellT - buyT;
-  document.getElementById('sBuy').textContent  = '¥' + Math.round(buyT).toLocaleString();
-  document.getElementById('sSell').textContent = '¥' + Math.round(sellT).toLocaleString();
-  var pEl = document.getElementById('sProfit');
-  pEl.textContent = (profit >= 0 ? '+' : '') + '¥' + Math.round(profit).toLocaleString();
-  pEl.style.color = profit >= 0 ? '#a78bfa' : '#ff4d4d';
-  document.getElementById('summaryBar').className = 'summary-bar' + (records.length ? ' show' : '');
+// ── helpers ──
+function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function set(id, v) { const e=document.getElementById(id); if(e) e.textContent = v; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(v) { const x=parseFloat(v); return isNaN(x)?'0':Math.round(x).toLocaleString('ja-JP'); }
+function fmtD(d) { return d ? String(d).slice(0,10).replace(/-/g,'/') : ''; }
+function setBusy(id, busy, label) {
+  const el = document.getElementById(id);
+  el.disabled = busy;
+  el.innerHTML = busy ? '<span class="spin"></span> 送信中…' : label;
 }
 
-function showError(m) { var e=document.getElementById('errorMsg'); e.textContent=m; e.style.display='block'; }
-function clearError() { document.getElementById('errorMsg').style.display='none'; }
+function clearBuy() {
+  ['b-name','b-src','b-memo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('b-price').value = '';
+  document.getElementById('b-qty').value = 1;
+  today('b-date');
+}
+function clearSell() {
+  ['s-name','s-orderid','s-memo'].forEach(id => document.getElementById(id).value = '');
+  ['s-price','s-fee','s-ship','s-pack','s-cost'].forEach(id => document.getElementById(id).value = 0);
+  document.getElementById('s-qty').value = 1;
+  today('s-date'); calcProfit();
+}
 
-// ── Excel出力 ─────────────────────────────────────────────
-function exportExcel() {
-  var wb = XLSX.utils.book_new();
-  var buyRecs  = records.filter(function(r){return r.type==='buy';});
-  var sellRecs = records.filter(function(r){return r.type==='sell';});
-
-  if (buyRecs.length) {
-    var data = [['仕入日','プラットフォーム','仕入先','商品名','カテゴリ','仕入単価','数量','仕入合計','メモ']];
-    buyRecs.forEach(function(r){ data.push([r.date,r.platform,r.shop,r.item,r.category,r.unit_price,r.qty,r.total,r.memo]); });
-    var ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = [{wch:12},{wch:12},{wch:16},{wch:28},{wch:16},{wch:12},{wch:8},{wch:12},{wch:16}];
-    XLSX.utils.book_append_sheet(wb, ws, 'トレカ仕入台帳');
-  }
-
-  if (sellRecs.length) {
-    var data2 = [['販売日','プラットフォーム','注文ID','商品名','カテゴリ','販売価格','手数料','送料','梱包費','仕入原価','純利益','メモ']];
-    sellRecs.forEach(function(r) {
-      var p = (r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0);
-      data2.push([r.date,r.platform,r.order_id,r.item,r.category,r.price,r.fee,r.shipping,r.packing,r.cost,p,r.memo]);
-    });
-    var ws2 = XLSX.utils.aoa_to_sheet(data2);
-    ws2['!cols'] = [{wch:12},{wch:12},{wch:20},{wch:26},{wch:16},{wch:12},{wch:10},{wch:8},{wch:10},{wch:12},{wch:12},{wch:16}];
-    XLSX.utils.book_append_sheet(wb, ws2, '販売台帳');
-
-    var allPlats = [];
-    sellRecs.forEach(function(r){ if(allPlats.indexOf(r.platform)===-1) allPlats.push(r.platform); });
-    allPlats.forEach(function(p) {
-      var rows = sellRecs.filter(function(r){return r.platform===p;});
-      if (!rows.length) return;
-      var pd = [['販売日','注文ID','商品名','カテゴリ','販売価格','手数料','送料','梱包費','仕入原価','純利益']];
-      rows.forEach(function(r){ var pr=(r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0); pd.push([r.date,r.order_id,r.item,r.category,r.price,r.fee,r.shipping,r.packing,r.cost,pr]); });
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pd), p.slice(0,28));
-    });
-  }
-
-  var buyT  = buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
-  var sellT = sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
-  var profT = sellRecs.reduce(function(s,r){return s+((r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0));},0);
-  var sum = [['集計サマリー',''],['',''],['仕入合計',buyT],['販売合計',sellT],['純利益合計（概算）',profT],['仕入件数',buyRecs.length],['販売件数',sellRecs.length],['',''],['出力日時',new Date().toLocaleString('ja-JP')]];
-  var sws = XLSX.utils.aoa_to_sheet(sum); sws['!cols']=[{wch:22},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, sws, '集計');
-
-  var now = new Date();
-  XLSX.writeFile(wb, 'トレカ収支_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.xlsx');
+let tt;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type||'');
+  clearTimeout(tt);
+  tt = setTimeout(() => el.className='', 3000);
 }
 </script>
 </body>
 </html>
- 
