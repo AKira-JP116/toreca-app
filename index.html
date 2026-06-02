@@ -119,6 +119,15 @@ main{padding:16px;max-width:760px;margin:0 auto;}
 .si-bar-fill{height:100%;border-radius:3px;transition:width .3s;background:var(--g);}
 .si-bar-fill.low{background:var(--y);}.si-bar-fill.out{background:var(--danger);}
 .stock-empty{text-align:center;padding:40px 0;color:var(--muted);font-size:13px;}
+.annual-card{background:var(--surface2);border:1.5px solid #38bdf8;border-radius:var(--r);padding:14px;margin-bottom:14px;}
+.annual-title{font-size:11px;color:#38bdf8;font-family:'DM Mono',monospace;margin-bottom:10px;font-weight:700;letter-spacing:.05em;}
+.annual-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.annual-item{display:flex;flex-direction:column;gap:3px;}
+.annual-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.annual-val{font-size:14px;font-weight:900;font-family:'DM Mono',monospace;}
+.annual-selector{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.annual-year-btn{padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;}
+.annual-year-btn.active{border-color:#38bdf8;color:#38bdf8;}
 /* 月次統計パネル */
 .stats-panel{display:none;}
 .stats-panel.show{display:block;}
@@ -252,6 +261,18 @@ main{padding:16px;max-width:760px;margin:0 auto;}
   </div>
   <!-- 月次統計パネル -->
   <div class="stats-panel" id="statsPanel">
+    <!-- 年間トータル -->
+    <div class="annual-card">
+      <div class="annual-title" id="annualTitle">📅 2026年 年間トータル</div>
+      <div class="annual-grid">
+        <div class="annual-item"><span class="annual-label">年間仕入</span><span class="annual-val buy" id="annBuy">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">年間販売</span><span class="annual-val sell" id="annSell">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">年間粗利</span><span class="annual-val profit" id="annProfit">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">仕入件数</span><span class="annual-val" style="color:var(--muted)" id="annBuyCnt">0件</span></div>
+        <div class="annual-item"><span class="annual-label">販売件数</span><span class="annual-val" style="color:var(--muted)" id="annSellCnt">0件</span></div>
+        <div class="annual-item"><span class="annual-label">年間利益率</span><span class="annual-val" style="color:#a78bfa" id="annMargin">-%</span></div>
+      </div>
+    </div>
     <div class="month-selector">
       <button class="month-nav" onclick="changeMonth(-1)">‹</button>
       <div class="month-label" id="monthLabel"></div>
@@ -383,6 +404,24 @@ function changeMonth(d){
 function renderStats(){
   var mn=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
   document.getElementById('monthLabel').textContent=currentYear+'年'+(currentMonth+1)+'月';
+
+  // 年間トータル
+  var yrStr=String(currentYear);
+  document.getElementById('annualTitle').textContent='📅 '+currentYear+'年 年間トータル';
+  var annBuyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(yrStr);});
+  var annSellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(yrStr);});
+  var annBuyT=annBuyRecs.reduce(function(s,r){return s+(r.total||0);},0);
+  var annSellT=annSellRecs.reduce(function(s,r){return s+(r.price||0);},0);
+  var annProfit=annSellT-annBuyT;
+  var annMargin=annSellT>0?Math.round((annProfit/annSellT)*100):0;
+  document.getElementById('annBuy').textContent='¥'+Math.round(annBuyT).toLocaleString();
+  document.getElementById('annSell').textContent='¥'+Math.round(annSellT).toLocaleString();
+  var apEl=document.getElementById('annProfit');
+  apEl.textContent=(annProfit>=0?'+':'')+'¥'+Math.round(annProfit).toLocaleString();
+  apEl.style.color=annProfit>=0?'#a78bfa':'#ff4d4d';
+  document.getElementById('annBuyCnt').textContent=annBuyRecs.length+'件';
+  document.getElementById('annSellCnt').textContent=annSellRecs.length+'件';
+  document.getElementById('annMargin').textContent=annMargin+'%';
 
   // 当月フィルター
   var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);});
