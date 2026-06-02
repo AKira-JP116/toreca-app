@@ -832,8 +832,11 @@ function deleteRecord() {
 }
 
 // モーダル外タップで閉じる
-document.getElementById('editModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+document.addEventListener('DOMContentLoaded', function() {
+  var modal = document.getElementById('editModal');
+  if (modal) modal.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
 });
 
 function exportExcel(){
