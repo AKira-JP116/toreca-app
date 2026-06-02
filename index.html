@@ -3,61 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>トレカ収支</title>
+<title>トレカ収支 自動入力</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--border:#2e2e2e;--y:#f5c518;--g:#00c896;--text:#f0f0f0;--muted:#777;--danger:#ff4d4d;--r:12px;--accent:#f5c518;}
+:root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--border:#2e2e2e;--y:#f5c518;--g:#00c896;--p:#a78bfa;--text:#f0f0f0;--muted:#777;--danger:#ff4d4d;--r:12px;--accent:#f5c518;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;min-height:100vh;}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
 .logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:30px;height:30px;background:var(--y);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.logo-icon{width:32px;height:32px;background:var(--y);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .logo-text{font-size:14px;font-weight:900;}
-.hright{display:flex;align-items:center;gap:8px;}
-.sync-badge{font-size:11px;font-family:'DM Mono',monospace;display:none;}
-.hbtn{background:var(--g);color:#000;border:none;border-radius:8px;padding:8px 14px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.logo-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.hbtn{background:var(--g);color:#000;border:none;border-radius:8px;padding:8px 16px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s;}
 .hbtn:hover{opacity:.85;}.hbtn:disabled{opacity:.35;cursor:default;}
-main{padding:16px;max-width:760px;margin:0 auto;}
-.summary{display:none;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.summary.show{display:flex;}
-.sitem{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:2px;}
-.sitem:not(:last-child){border-right:1px solid var(--border);}
-.slabel{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
-.sval{font-size:15px;font-weight:900;font-family:'DM Mono',monospace;}
-.sval.buy{color:var(--y);}.sval.sell{color:var(--g);}.sval.profit{color:#a78bfa;}
-.main-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.mtab{flex:1;padding:11px 0;background:var(--surface);color:var(--muted);font-weight:700;font-size:12px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+main{padding:24px;max-width:820px;margin:0 auto;}
+.mode-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.mtab{flex:1;padding:13px 0;background:var(--surface);color:var(--muted);font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
 .mtab:not(:last-child){border-right:1px solid var(--border);}
 .mtab.act-buy{background:rgba(245,197,24,.1);color:var(--y);}
 .mtab.act-sell{background:rgba(0,200,150,.1);color:var(--g);}
-.mtab.act-stock{background:rgba(167,139,250,.1);color:#a78bfa;}
-.mtab.act-stats{background:rgba(56,189,248,.1);color:#38bdf8;}
-.platform-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-.pchip{padding:6px 13px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Zen Kaku Gothic New',sans-serif;}
-.pchip.sel{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.04);}
-.alert{border-radius:var(--r);padding:12px 16px;font-size:13px;font-weight:700;margin-bottom:14px;display:none;align-items:center;gap:10px;}
-.alert.warn{background:rgba(255,77,77,.1);border:1px solid rgba(255,77,77,.35);color:#ff8888;display:flex;}
-.alert.info{background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);color:var(--y);display:flex;}
-.jan-row{display:flex;gap:8px;margin-bottom:12px;}
-.jan-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-family:'DM Mono',monospace;font-size:13px;outline:none;-webkit-appearance:none;}
-.jan-input:focus{border-color:var(--accent);}
-.jan-btn{padding:10px 14px;border:none;border-radius:8px;background:var(--surface2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Zen Kaku Gothic New',sans-serif;border:1px solid var(--border);}
-.jan-btn:hover{border-color:var(--accent);color:var(--accent);}
-.jan-result{font-size:12px;color:var(--g);font-family:'DM Mono',monospace;margin-bottom:8px;display:none;}
-.jan-result.err{color:var(--danger);}
-.suggest-wrap{position:relative;flex:1;min-width:0;}
-.suggest-wrap input{width:100%;}
-.suggest-dd{position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:50;display:none;max-height:200px;overflow-y:auto;}
-.suggest-dd.open{display:block;}
-.suggest-opt{padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.suggest-opt:hover{background:var(--surface);}
-.stock-tag{font-size:11px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:10px;white-space:nowrap;}
-.stock-ok{background:rgba(0,200,150,.15);color:var(--g);}
-.stock-low{background:rgba(245,197,24,.15);color:var(--y);}
-.stock-none{background:rgba(255,77,77,.12);color:#ff8888;}
-.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;}
-.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.platform-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.pchip{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Zen Kaku Gothic New',sans-serif;}
+.pchip:hover{border-color:var(--accent);color:var(--accent);}
+.pchip.sel{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.05);}
+.method-row{display:flex;gap:8px;margin-bottom:18px;}
+.mbtn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.mbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.04);}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;background:var(--surface);margin-bottom:16px;transition:all .2s;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--surface2);}
+.upload-zone .uicon{font-size:36px;margin-bottom:10px;}
+.upload-zone h3{font-size:15px;font-weight:700;margin-bottom:5px;}
+.upload-zone p{font-size:12px;color:var(--muted);}
+.upload-zone input{display:none;}
+.preview-wrap{position:relative;border-radius:var(--r);overflow:hidden;margin-bottom:16px;display:none;}
+.preview-wrap.show{display:block;}
+.preview-wrap img{width:100%;max-height:240px;object-fit:contain;background:#111;display:block;}
+.prev-rm{position:absolute;top:8px;right:8px;width:26px;height:26px;background:rgba(0,0,0,.75);border:none;border-radius:50%;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.ai-btn{width:100%;padding:13px;border:none;border-radius:var(--r);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s;}
+.ai-btn:disabled{opacity:.35;cursor:default;}
+.ai-btn.buy{background:var(--y);color:#000;}
+.ai-btn.sell{background:var(--g);color:#000;}
+.spinner{width:17px;height:17px;border:2.5px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.form-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;display:none;animation:fadeUp .25s ease;}
+.form-panel.show{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .panel-label{font-size:12px;font-weight:700;color:var(--muted);font-family:'DM Mono',monospace;}
 .plat-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;}
 .pb-buy{background:rgba(245,197,24,.15);color:var(--y);}
@@ -67,974 +59,565 @@ main{padding:16px;max-width:760px;margin:0 auto;}
 .fi.full{grid-column:1/-1;}
 .fi label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:6px;}
 .fi-inner{display:flex;gap:6px;align-items:center;}
-.fi input,.fi select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 11px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;outline:none;transition:border-color .15s;min-width:0;-webkit-appearance:none;}
+.fi input,.fi select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 11px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;outline:none;transition:border-color .15s;min-width:0;}
 .fi input:focus,.fi select:focus{border-color:var(--accent);}
 .fi select option{background:#222;}
+/* shop combo */
 .shop-wrap{position:relative;flex:1;min-width:0;}
 .shop-wrap input{width:100%;}
-.shop-dd{position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:50;display:none;max-height:200px;overflow-y:auto;}
-.shop-dd.open{display:block;}
-.shop-opt{padding:10px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.shop-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:50;overflow:hidden;display:none;max-height:180px;overflow-y:auto;}
+.shop-dropdown.open{display:block;}
+.shop-opt{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .shop-opt:hover{background:var(--surface);}
-.shop-opt-del{font-size:11px;color:var(--muted);padding:2px 6px;border:none;background:transparent;cursor:pointer;border-radius:4px;}
+.shop-opt-name{flex:1;}
+.shop-opt-del{font-size:11px;color:var(--muted);padding:2px 5px;border-radius:4px;border:none;background:transparent;cursor:pointer;flex-shrink:0;}
 .shop-opt-del:hover{color:var(--danger);}
-.shop-new{font-size:10px;color:var(--accent);font-family:'DM Mono',monospace;}
-.skip-btn{flex-shrink:0;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;white-space:nowrap;}
+.shop-new-badge{font-size:10px;color:var(--accent);font-family:'DM Mono',monospace;}
+.skip-btn{flex-shrink:0;padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;white-space:nowrap;font-family:'DM Mono',monospace;transition:all .15s;}
 .skip-btn:hover{border-color:var(--muted);color:var(--text);}
+.skip-btn.skipped{background:rgba(255,255,255,.04);}
 .default-badge{font-size:10px;background:rgba(245,197,24,.12);color:var(--y);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;}
 .auto-hint{font-size:10px;color:#555;font-family:'DM Mono',monospace;margin-top:2px;}
-.add-btn{width:100%;padding:13px;border-radius:var(--r);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px;transition:all .15s;border:none;-webkit-tap-highlight-color:transparent;}
-.add-btn.buy{background:var(--y);color:#000;}
-.add-btn.sell{background:var(--g);color:#000;}
-.add-btn:active{opacity:.8;transform:scale(.98);}
-.add-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-.stock-panel{display:none;}
-.stock-panel.show{display:block;}
-.stock-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none;}
-.stock-search:focus{border-color:#a78bfa;}
-.stock-filters{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
-.sfil{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
-.sfil.on{border-color:#a78bfa;color:#a78bfa;}
-.stock-list{display:flex;flex-direction:column;gap:6px;}
-.stock-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;animation:fadeUp .2s;}
-.stock-item.low{border-color:rgba(245,197,24,.3);}
-.stock-item.out{border-color:rgba(255,77,77,.25);background:rgba(255,77,77,.04);}
-.si-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
-.si-name{font-size:14px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.si-stats{display:flex;gap:10px;flex-wrap:wrap;}
-.si-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.si-stat-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
-.si-stat-val{font-size:14px;font-weight:900;font-family:'DM Mono',monospace;}
-.si-stat-val.in{color:var(--y);}.si-stat-val.out-v{color:var(--g);}.si-stat-val.rem{color:#a78bfa;}.si-stat-val.warn{color:var(--danger);}
-.si-bar{margin-top:8px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
-.si-bar-fill{height:100%;border-radius:3px;transition:width .3s;background:var(--g);}
-.si-bar-fill.low{background:var(--y);}.si-bar-fill.out{background:var(--danger);}
-.stock-empty{text-align:center;padding:40px 0;color:var(--muted);font-size:13px;}
-.annual-card{background:var(--surface2);border:1.5px solid #38bdf8;border-radius:var(--r);padding:14px;margin-bottom:14px;}
-.annual-title{font-size:11px;color:#38bdf8;font-family:'DM Mono',monospace;margin-bottom:10px;font-weight:700;letter-spacing:.05em;}
-.annual-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.annual-item{display:flex;flex-direction:column;gap:3px;}
-.annual-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
-.annual-val{font-size:14px;font-weight:900;font-family:'DM Mono',monospace;}
-.stats-panel{display:none;}
-.stats-panel.show{display:block;}
-.month-selector{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-.month-nav{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.month-nav:hover{border-color:var(--accent);}
-.month-label{flex:1;text-align:center;font-size:16px;font-weight:900;font-family:'DM Mono',monospace;color:#38bdf8;}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
-.stat-card.full{grid-column:1/-1;}
-.stat-card-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;}
-.stat-card-val{font-size:20px;font-weight:900;font-family:'DM Mono',monospace;}
-.stat-card-val.buy{color:var(--y);}
-.stat-card-val.sell{color:var(--g);}
-.stat-card-val.profit{color:#a78bfa;}
-.stat-card-val.stock{color:#38bdf8;}
-.stat-card-sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;}
-.monthly-chart{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
-.chart-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;}
-.chart-subtitle{font-size:10px;color:#444;font-family:'DM Mono',monospace;margin-bottom:14px;}
-.chart-bars{display:flex;align-items:flex-end;gap:6px;height:110px;padding:0 2px;}
-.chart-bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;}
-.chart-bar-pair{display:flex;align-items:flex-end;gap:2px;width:100%;flex:1;}
-.chart-bar{border-radius:3px 3px 0 0;min-height:3px;transition:all .4s;flex:1;}
-.chart-bar.buy-bar{background:linear-gradient(to top,#b8960a,var(--y));}
-.chart-bar.sell-bar{background:linear-gradient(to top,#00a078,var(--g));}
-.chart-month-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center;}
-.chart-val-label{font-size:8px;color:#555;font-family:'DM Mono',monospace;text-align:center;margin-bottom:2px;}
-.chart-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
-.chart-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
-.chart-leg-dot{width:10px;height:10px;border-radius:2px;}
-.divider{height:1px;background:var(--border);margin:20px 0;}
+.add-btn{width:100%;padding:11px;border-radius:var(--r);font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .15s;}
+.add-btn.buy{border:1.5px solid var(--y);background:transparent;color:var(--y);}
+.add-btn.buy:hover{background:rgba(245,197,24,.08);}
+.add-btn.sell{border:1.5px solid var(--g);background:transparent;color:var(--g);}
+.add-btn.sell:hover{background:rgba(0,200,150,.08);}
+.error-msg{background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#ff8888;margin-bottom:12px;display:none;}
+.divider{height:1px;background:var(--border);margin:24px 0;}
 .rec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .rec-title{font-size:14px;font-weight:900;}
 .rec-cnt{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
-.rec-filters{display:flex;gap:6px;margin-bottom:10px;}
+.rec-filters{display:flex;gap:6px;margin-bottom:12px;}
 .rfil{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
 .rfil.on{border-color:var(--accent);color:var(--accent);}
 .rec-list{display:flex;flex-direction:column;gap:5px;}
 .rec-item{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 13px;gap:10px;animation:fadeUp .2s;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 .rtype{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
-.rtype.buy{background:rgba(245,197,24,.12);}.rtype.sell{background:rgba(0,200,150,.12);}
+.rtype.buy{background:rgba(245,197,24,.12);}
+.rtype.sell{background:rgba(0,200,150,.12);}
 .rname{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .rplat{font-size:11px;color:var(--muted);white-space:nowrap;}
 .ramnt{font-family:'DM Mono',monospace;font-size:13px;white-space:nowrap;}
 .ramnt.buy{color:var(--y);}.ramnt.sell{color:var(--g);}
 .rdate{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
-.rdel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px;border-radius:4px;flex-shrink:0;}
+.rdel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;flex-shrink:0;}
 .rdel:hover{color:var(--danger);}
-.empty{text-align:center;padding:40px 0;color:var(--muted);font-size:13px;}
-.empty-big{font-size:32px;margin-bottom:8px;}
-@media(max-width:480px){.fgrid{grid-template-columns:1fr;}main{padding:12px;}header{padding:12px 14px;}.summary.show{flex-wrap:wrap;}.sitem{min-width:45%;}.si-stats{gap:14px;}.stats-grid{grid-column:1fr;}}
-.bulk-panel{display:none;}
-.bulk-panel.show{display:block;}
-.bulk-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.btab{flex:1;padding:10px 0;background:var(--surface);color:var(--muted);font-weight:700;font-size:13px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
-.btab:not(:last-child){border-right:1px solid var(--border);}
-.btab.act-buy{background:rgba(245,197,24,.1);color:var(--y);}
-.btab.act-sell{background:rgba(0,200,150,.1);color:var(--g);}
-.bulk-toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-.bulk-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;white-space:nowrap;}
-.bulk-btn:hover{border-color:var(--accent);color:var(--accent);}
-.bulk-btn.primary{background:var(--y);color:#000;border-color:var(--y);}
-.bulk-btn.primary:hover{opacity:.85;}
-.bulk-btn.danger{border-color:var(--danger);color:var(--danger);}
-.bulk-btn.danger:hover{background:rgba(255,77,77,.08);}
-.bulk-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;}
-table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px;}
-.bulk-table th{background:var(--surface2);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:8px 6px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;}
-.bulk-table td{padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
-.bulk-table tr:hover td{background:rgba(255,255,255,.02);}
-.bulk-table tr.new-row td{background:rgba(245,197,24,.04);}
-.bulk-table tr.deleted td{opacity:.3;text-decoration:line-through;}
-.bt-input{width:100%;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text);padding:5px 6px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;outline:none;min-width:0;}
-.bt-input:focus{border-color:var(--accent);background:var(--surface2);}
-.bt-select{width:100%;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text);padding:5px 4px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;outline:none;}
-.bt-select:focus{border-color:var(--accent);background:var(--surface2);}
-.bt-chk{width:16px;height:16px;cursor:pointer;accent-color:var(--danger);}
-.bulk-status{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px;}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:760px;max-height:90vh;overflow-y:auto;padding:20px;animation:slideUp .25s ease;}
-@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.modal-title{font-size:15px;font-weight:900;}
-.modal-close{width:30px;height:30px;border:none;background:var(--surface2);border-radius:50%;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.modal-actions{display:flex;gap:8px;margin-top:14px;}
-.modal-save{flex:1;padding:12px;border:none;border-radius:var(--r);background:var(--g);color:#000;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:14px;cursor:pointer;}
-.modal-delete{padding:12px 18px;border:1px solid var(--danger);border-radius:var(--r);background:transparent;color:var(--danger);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
-.rec-edit{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;border-radius:4px;flex-shrink:0;}
-.rec-edit:hover{color:var(--accent);}
-/* オフラインキューバッジ */
-.queue-badge{font-size:11px;font-family:'DM Mono',monospace;background:rgba(245,197,24,.15);color:var(--y);padding:3px 8px;border-radius:10px;display:none;}
-.queue-badge.show{display:inline;}
+.empty{text-align:center;padding:36px 0;color:var(--muted);font-size:13px;}
+.empty-big{font-size:30px;margin-bottom:8px;}
+.summary-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:none;}
+.summary-bar.show{display:flex;gap:24px;flex-wrap:wrap;}
+.sitem{display:flex;flex-direction:column;gap:2px;}
+.slabel{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.sval{font-size:16px;font-weight:900;font-family:'DM Mono',monospace;}
+.sval.buy{color:var(--y);}.sval.sell{color:var(--g);}.sval.profit{color:#a78bfa;}
+@media(max-width:520px){.fgrid{grid-template-columns:1fr;}main{padding:14px;}header{padding:12px 14px;}.summary-bar.show{gap:14px;}}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">
     <div class="logo-icon">🃏</div>
-    <div class="logo-text">トレカ収支</div>
+    <div><div class="logo-text">トレカ収支 AI入力</div><div class="logo-sub">photo → data → xlsx</div></div>
   </div>
-  <div class="hright">
-    <span class="queue-badge" id="queueBadge"></span>
-    <span class="sync-badge" id="syncBadge"></span>
-    <button class="hbtn" id="exportBtn" disabled onclick="exportExcel()">⬇ Excel</button>
-  </div>
+  <button class="hbtn" id="exportBtn" disabled onclick="exportExcel()">⬇ Excel出力</button>
 </header>
 <main>
-  <div class="summary" id="summaryBar">
+  <div class="mode-tabs">
+    <button class="mtab act-buy" id="mtBuy" onclick="setMode('buy')">🃏 仕入れ記録</button>
+    <button class="mtab" id="mtSell" onclick="setMode('sell')">💴 販売記録</button>
+  </div>
+  <div class="platform-row" id="platformRow"></div>
+  <div class="method-row">
+    <button class="mbtn active" id="mPhoto" onclick="setMethod('photo')">📷 写真から自動入力</button>
+    <button class="mbtn" id="mManual" onclick="setMethod('manual')">✏️ 手入力</button>
+  </div>
+  <div class="upload-zone" id="uploadZone">
+    <div class="uicon" id="uIcon">📷</div>
+    <h3 id="uTitle">写真をドロップ、またはタップして選択</h3>
+    <p id="uSub">領収書・注文画面のスクショをアップロード</p>
+    <p style="font-size:11px;color:#555;margin-top:6px;font-family:'DM Mono',monospace;">JPG / PNG / HEIC</p>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+  </div>
+  <div class="preview-wrap" id="previewWrap">
+    <img id="previewImg" src="" alt="preview">
+    <button class="prev-rm" onclick="clearImage()">✕</button>
+  </div>
+  <div class="error-msg" id="errorMsg"></div>
+  <button class="ai-btn buy" id="aiBtn" disabled onclick="analyze()">
+    <span class="spinner" id="spinner"></span>
+    <span id="aiBtnTxt">📸 AIで自動読み取り</span>
+  </button>
+  <div class="form-panel" id="formPanel">
+    <div class="panel-header">
+      <span class="panel-label" id="panelLabel">手入力フォーム</span>
+      <span class="plat-badge pb-buy" id="platBadge">カードショップ 仕入れ</span>
+    </div>
+    <div class="fgrid" id="fieldGrid"></div>
+    <button class="add-btn buy" id="addBtn" onclick="addRecord()">✓ 記録に追加</button>
+  </div>
+  <div class="divider"></div>
+  <div class="summary-bar" id="summaryBar">
     <div class="sitem"><span class="slabel">仕入合計</span><span class="sval buy" id="sBuy">¥0</span></div>
     <div class="sitem"><span class="slabel">販売合計</span><span class="sval sell" id="sSell">¥0</span></div>
-    <div class="sitem"><span class="slabel">粗利</span><span class="sval profit" id="sProfit">¥0</span></div>
+    <div class="sitem"><span class="slabel">粗利（概算）</span><span class="sval profit" id="sProfit">¥0</span></div>
   </div>
-  <div class="main-tabs">
-    <button class="mtab act-buy" id="mtBuy" onclick="setMode('buy')">🃏 仕入れ</button>
-    <button class="mtab" id="mtSell" onclick="setMode('sell')">💴 販売</button>
-    <button class="mtab" id="mtStock" onclick="setMode('stock')">📦 在庫</button>
-    <button class="mtab" id="mtStats" onclick="setMode('stats')">📊 月次</button>
-    <button class="mtab" id="mtBulk" onclick="setMode('bulk')">📋 一括</button>
+  <div class="rec-hdr">
+    <span class="rec-title">記録済みデータ</span>
+    <span class="rec-cnt" id="recCnt">0件</span>
   </div>
-  <div class="bulk-panel" id="bulkPanel">
-    <div class="bulk-tabs">
-      <button class="btab act-buy" id="btBuy" onclick="setBulkType('buy')">🃏 仕入れ一覧</button>
-      <button class="btab" id="btSell" onclick="setBulkType('sell')">💴 販売一覧</button>
-    </div>
-    <div class="bulk-toolbar">
-      <button class="bulk-btn primary" onclick="bulkAddRow()">＋ 行を追加</button>
-      <button class="bulk-btn" onclick="bulkSave()">✓ 変更を保存</button>
-      <button class="bulk-btn danger" onclick="bulkDeleteSelected()">🗑 選択を削除</button>
-    </div>
-    <div class="bulk-status" id="bulkStatus">0件</div>
-    <div class="bulk-table-wrap">
-      <table class="bulk-table" id="bulkTable">
-        <thead id="bulkHead"></thead>
-        <tbody id="bulkBody"></tbody>
-      </table>
-    </div>
+  <div class="rec-filters">
+    <button class="rfil on" onclick="setFilter('all',this)">すべて</button>
+    <button class="rfil" onclick="setFilter('buy',this)">🃏 仕入れ</button>
+    <button class="rfil" onclick="setFilter('sell',this)">💴 販売</button>
   </div>
-  <div id="inputArea">
-    <div class="platform-row" id="platformRow"></div>
-    <div class="jan-row">
-      <input class="jan-input" id="janInput" placeholder="JAN / ASIN を入力して商品名検索" inputmode="numeric">
-      <button class="jan-btn" onclick="searchJAN()">🔍 検索</button>
-    </div>
-    <div class="jan-result" id="janResult"></div>
-    <div class="alert" id="stockAlert"><span>⚠️</span><span id="stockAlertMsg"></span></div>
-    <div class="form-panel" id="formPanel">
-      <div class="panel-header">
-        <span class="panel-label">入力フォーム</span>
-        <span class="plat-badge pb-buy" id="platBadge">カードショップ 仕入れ</span>
-      </div>
-      <div class="fgrid" id="fieldGrid"></div>
-      <button class="add-btn buy" id="addBtn" onclick="addRecord()">＋ 追加</button>
-    </div>
-    <div class="divider"></div>
-    <div class="rec-hdr">
-      <span class="rec-title">記録</span>
-      <span class="rec-cnt" id="recCnt">0件</span>
-    </div>
-    <div class="rec-filters">
-      <button class="rfil on" onclick="setFilter('all',this)">すべて</button>
-      <button class="rfil" onclick="setFilter('buy',this)">🃏 仕入れ</button>
-      <button class="rfil" onclick="setFilter('sell',this)">💴 販売</button>
-    </div>
-    <div class="rec-list" id="recList">
-      <div class="empty"><div class="empty-big">📋</div>まだ記録がありません</div>
-    </div>
-  </div>
-  <div class="stock-panel" id="stockPanel">
-    <input class="stock-search" id="stockSearch" placeholder="🔍 商品名で検索..." oninput="renderStock()">
-    <div class="stock-filters">
-      <button class="sfil on" onclick="setStockFilter('all',this)">すべて</button>
-      <button class="sfil" onclick="setStockFilter('ok',this)">✓ 在庫あり</button>
-      <button class="sfil" onclick="setStockFilter('low',this)">⚠ 残り少</button>
-      <button class="sfil" onclick="setStockFilter('out',this)">✕ 在庫なし</button>
-    </div>
-    <div class="stock-list" id="stockList">
-      <div class="stock-empty">📦 仕入れを記録すると在庫が表示されます</div>
-    </div>
-  </div>
-  <div class="stats-panel" id="statsPanel">
-    <div class="month-selector">
-      <button class="month-nav" onclick="changeMonth(-1)">‹</button>
-      <div class="month-label" id="monthLabel"></div>
-      <button class="month-nav" onclick="changeMonth(1)">›</button>
-    </div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-card-label">💰 売上</div>
-        <div class="stat-card-val sell" id="statSell">¥0</div>
-        <div class="stat-card-sub" id="statSellCnt">0件　仕入 <span id="statBuy">¥0</span>（<span id="statBuyCnt">0</span>件）</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">📈 粗利（売上−仕入）</div>
-        <div class="stat-card-val profit" id="statProfit">¥0</div>
-        <div class="stat-card-sub" id="statMargin">利益率 -%</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">✨ 純利益（粗利−手数料−送料−梱包）</div>
-        <div class="stat-card-val" id="statNet" style="color:#34d399;">¥0</div>
-        <div class="stat-card-sub" id="statNetSub">経費 ¥0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">👛 手元のお金（累計純利益）</div>
-        <div class="stat-card-val" id="statCF">¥0</div>
-        <div class="stat-card-sub" id="statCFSub">記録開始〜月末累計</div>
-      </div>
-      <div class="stat-card full">
-        <div class="stat-card-label">📦 在庫金額（月末時点）</div>
-        <div class="stat-card-val stock" id="statStock">¥0</div>
-        <div class="stat-card-sub" id="statStockCnt">残 0点</div>
-      </div>
-    </div>
-    <div class="monthly-chart">
-      <div class="chart-title">過去6ヶ月 仕入れ・販売推移</div>
-      <div class="chart-subtitle">左：仕入れ　右：販売　単位：万円</div>
-      <div class="chart-bars" id="chartBars"></div>
-      <div class="chart-legend">
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--y)"></div>仕入れ</div>
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--g)"></div>販売</div>
-      </div>
-    </div>
-    <div class="annual-card">
-      <div class="annual-title" id="annualTitle">📅 2026年 年間トータル</div>
-      <div class="annual-grid">
-        <div class="annual-item"><span class="annual-label">💰 売上</span><span class="annual-val sell" id="annSell">¥0</span><span class="annual-label" id="annSellCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">🛒 仕入</span><span class="annual-val buy" id="annBuy">¥0</span><span class="annual-label" id="annBuyCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">📈 粗利</span><span class="annual-val profit" id="annProfit">¥0</span><span class="annual-label" id="annMargin">利益率 -%</span></div>
-        <div class="annual-item"><span class="annual-label">✨ 純利益</span><span class="annual-val" id="annNet" style="color:#34d399;">¥0</span><span class="annual-label" id="annNetSub">経費 ¥0</span></div>
-        <div class="annual-item"><span class="annual-label">👛 手元のお金</span><span class="annual-val" id="annCF">¥0</span><span class="annual-label" id="annCFSub">年間累計純利益</span></div>
-        <div class="annual-item"><span class="annual-label">📦 在庫金額</span><span class="annual-val stock" id="annStock">¥0</span><span class="annual-label" id="annStockCnt">残 0点</span></div>
-      </div>
-    </div>
+  <div class="rec-list" id="recList">
+    <div class="empty"><div class="empty-big">📋</div>まだ記録がありません</div>
   </div>
 </main>
-<div class="modal-overlay hidden" id="editModal">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalTitle">記録を編集</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="fgrid" id="modalGrid"></div>
-    <div class="modal-actions">
-      <button class="modal-save" onclick="saveEdit()">✓ 保存</button>
-      <button class="modal-delete" onclick="deleteRecord()">🗑 削除</button>
-    </div>
-  </div>
-</div>
 <script>
-// ★ GAS URL
-var GAS_URL='https://script.google.com/macros/s/AKfycbxVXXXVg8YqXNmpaOyLV5OK9o_EYUQCdFjZxJ77JzLBWBx7X-W48AIQJroB11ip5TkS/exec';
+var mode='buy', method='manual', platform='カードショップ', imgBase64=null, records=[], currentFilter='all';
 
-var mode='buy', platform='カードショップ', records=[], currentFilter='all';
-var shopHistory=[], stockFilter='all', autoCostForItem=0;
-var currentMonth=new Date().getMonth(), currentYear=new Date().getFullYear();
+// ── カテゴリ ──────────────────────────────────────────────
+var CATEGORIES = [
+  'ポケモンカード','遊戯王','ワンピース','デュエマ','MTG',
+  'ヴァンガード','ヴァイスシュヴァルツ','バトルスピリッツ','UNION ARENA','その他'
+];
 
-// ★ オフラインキュー
-var offlineQueue=[];
+// ── プラットフォーム ──────────────────────────────────────
+var PLATFORMS = {
+  buy:  ['カードショップ','Amazon','メルカリ','ヤフオク','その他通販','直接購入'],
+  sell: ['Amazon','メルカリ','ヤフオク','カードラッシュ','トレトク','その他']
+};
 
-var PLATFORMS={buy:['Amazon','カードショップ','その他通販','直接購入','ヤフオク','メルカリ'],sell:['Amazon','カードラッシュ','その他','トレトク','買取業者','ヤフオク','メルカリ']};
+// ── 店名履歴（セッション内で保持） ──────────────────────
+var shopHistory = [];
 
-// ★ FIELDSからcategoryを削除（GASヘッダーに存在しないため）
-var FIELDS={
-  buy:[
-    {key:'date',label:'仕入日',type:'date',full:false,skippable:false},
-    {key:'shop',label:'仕入先・店名',type:'shop',full:false,skippable:true,isDefault:true},
-    {key:'item',label:'商品名（カード名）',type:'item',full:true,skippable:false},
-    {key:'unit_price',label:'仕入単価（円）',type:'number',full:false,skippable:true},
-    {key:'qty',label:'数量',type:'number',full:false,skippable:false},
-    {key:'total',label:'仕入合計（円）',type:'number',full:false,skippable:false},
-    {key:'memo',label:'メモ',type:'text',full:true,skippable:true}
+function addShopHistory(name) {
+  name = name.trim();
+  if (!name || shopHistory.indexOf(name) !== -1) return;
+  shopHistory.push(name);
+}
+function removeShopHistory(name) {
+  shopHistory = shopHistory.filter(function(s){ return s !== name; });
+}
+
+// ── フィールド定義 ────────────────────────────────────────
+var FIELDS = {
+  buy: [
+    {key:'date',      label:'仕入日',           type:'date',   full:false, skippable:false},
+    {key:'shop',      label:'仕入先・店名',       type:'shop',   full:false, skippable:true, isDefault:true},
+    {key:'item',      label:'商品名（カード名）',  type:'text',   full:true,  skippable:false},
+    {key:'category',  label:'カテゴリ',           type:'sel',    full:false, skippable:false},
+    {key:'unit_price',label:'仕入単価（円）',      type:'number', full:false, skippable:true},
+    {key:'qty',       label:'数量',               type:'number', full:false, skippable:false},
+    {key:'total',     label:'仕入合計（円）',      type:'number', full:false, skippable:false},
+    {key:'memo',      label:'メモ',               type:'text',   full:true,  skippable:true}
   ],
-  sell:[
-    {key:'date',label:'販売日',type:'date',full:false,skippable:false},
-    {key:'order_id',label:'注文ID / 取引ID',type:'text',full:false,skippable:true,labelAlt:{'買取業者':'買取ID・伝票番号'}},
-    {key:'item',label:'商品名',type:'item',full:true,skippable:false},
-    {key:'qty',label:'販売数量',type:'number',full:false,skippable:false},
-    {key:'price',label:'販売価格（円）',type:'number',full:false,skippable:false,labelAlt:{'買取業者':'買取金額（円）'}},
-    {key:'shipping',label:'送料（円）',type:'number',full:false,skippable:true},
-    {key:'packing',label:'梱包費（円）',type:'number',full:false,skippable:true},
-    {key:'memo',label:'メモ',type:'text',full:true,skippable:true}
+  sell: [
+    {key:'date',     label:'販売日',             type:'date',   full:false, skippable:false},
+    {key:'order_id', label:'注文ID / 取引ID',    type:'text',   full:false, skippable:true},
+    {key:'item',     label:'商品名',              type:'text',   full:true,  skippable:false},
+    {key:'category', label:'カテゴリ',            type:'sel',    full:false, skippable:false},
+    {key:'price',    label:'販売価格（円）',       type:'number', full:false, skippable:false},
+    {key:'fee',      label:'手数料（円）',         type:'number', full:false, skippable:true},
+    {key:'shipping', label:'送料（円）',           type:'number', full:false, skippable:true},
+    {key:'packing',  label:'梱包費（円）',         type:'number', full:false, skippable:true},
+    {key:'cost',     label:'仕入原価（円）',       type:'number', full:false, skippable:true},
+    {key:'memo',     label:'メモ',                type:'text',   full:true,  skippable:true}
   ]
 };
 
-// ── JAN検索 ───────────────────────────────────────────────
-async function searchJAN(){
-  var code=document.getElementById('janInput').value.trim();if(!code)return;
-  var res=document.getElementById('janResult');
-  res.textContent='検索中...';res.className='jan-result';res.style.display='block';
-  try{
-    var url=code.length<=13?'https://api.upcitemdb.com/prod/trial/lookup?upc='+code:'https://www.googleapis.com/books/v1/volumes?q=isbn:'+code;
-    var isJAN=code.length<=13;
-    var resp=await fetch(url);var data=await resp.json();var name='';
-    if(isJAN&&data.items&&data.items[0])name=data.items[0].title||'';
-    else if(!isJAN&&data.items&&data.items[0])name=(data.items[0].volumeInfo&&data.items[0].volumeInfo.title)||'';
-    if(!name&&code.match(/^B[A-Z0-9]{9}$/)){res.textContent='ASIN: '+code+' — 商品名を手動で入力してください';res.className='jan-result err';return;}
-    if(name){var itemEl=document.getElementById('f_item');if(itemEl)itemEl.value=name;res.textContent='✓ '+name;res.className='jan-result';}
-    else{res.textContent='商品が見つかりませんでした。手動で入力してください。';res.className='jan-result err';}
-  }catch(e){res.textContent='検索に失敗しました。手動で入力してください。';res.className='jan-result err';}
-}
+// ── 初期化 ────────────────────────────────────────────────
+setMode('buy');
+setMethod('manual');
 
-// ── 在庫計算 ──────────────────────────────────────────────
-function calcStock(){
-  var map={};
-  records.forEach(function(r){
-    var name=(r.item||'').trim();if(!name)return;
-    if(!map[name])map[name]={name:name,bought:0,sold:0,avgCost:0,totalCost:0};
-    if(r.type==='buy'){map[name].bought+=(parseFloat(r.qty)||0);map[name].totalCost+=(parseFloat(r.total)||0);}
-    if(r.type==='sell')map[name].sold+=(parseFloat(r.qty)||0);
+function setMode(m) {
+  mode = m;
+  var isBuy = m === 'buy';
+  document.getElementById('mtBuy').className = 'mtab' + (isBuy ? ' act-buy' : '');
+  document.getElementById('mtSell').className = 'mtab' + (!isBuy ? ' act-sell' : '');
+  document.getElementById('aiBtn').className = 'ai-btn ' + (isBuy ? 'buy' : 'sell');
+  document.documentElement.style.setProperty('--accent', isBuy ? '#f5c518' : '#00c896');
+
+  // デフォルトプラットフォーム
+  platform = isBuy ? 'カードショップ' : 'Amazon';
+
+  var row = document.getElementById('platformRow');
+  row.innerHTML = '';
+  PLATFORMS[m].forEach(function(p) {
+    var b = document.createElement('button');
+    b.className = 'pchip' + (p === platform ? ' sel' : '');
+    b.textContent = p;
+    b.onclick = function() { selectPlatform(p, b); };
+    row.appendChild(b);
   });
-  Object.values(map).forEach(function(e){e.avgCost=e.bought>0?e.totalCost/e.bought:0;});
-  return map;
-}
-function getStockOf(itemName){var s=calcStock();var e=s[(itemName||'').trim()];if(!e)return Infinity;return e.bought-e.sold;}
 
-// ── 月次統計 ──────────────────────────────────────────────
-function changeMonth(d){
-  currentMonth+=d;
-  if(currentMonth>11){currentMonth=0;currentYear++;}
-  if(currentMonth<0){currentMonth=11;currentYear--;}
-  renderStats();
+  updateUploadUI();
+  hideForm();
+  clearError();
+  if (method === 'manual') showManualForm();
 }
-function calcStockAt(endStr){
-  var map={};
-  records.forEach(function(r){
-    if((r.date||'')>endStr)return;
-    var name=(r.item||'').trim();if(!name)return;
-    if(!map[name])map[name]={qty:0,totalCost:0,bought:0};
-    if(r.type==='buy'){map[name].qty+=(parseFloat(r.qty)||0);map[name].bought+=(parseFloat(r.qty)||0);map[name].totalCost+=(parseFloat(r.total)||0);}
-    if(r.type==='sell')map[name].qty-=(parseFloat(r.qty)||0);
+
+function selectPlatform(p, el) {
+  platform = (platform === p) ? (mode === 'buy' ? 'カードショップ' : 'Amazon') : p;
+  document.querySelectorAll('.pchip').forEach(function(c) { c.classList.remove('sel'); });
+  // 選択中のchipをハイライト
+  document.querySelectorAll('.pchip').forEach(function(c) {
+    if (c.textContent === platform) c.classList.add('sel');
   });
-  var val=0,qty=0;
-  Object.values(map).forEach(function(e){var rem=Math.max(0,e.qty);val+=rem*(e.bought>0?e.totalCost/e.bought:0);qty+=rem;});
-  return{val:val,qty:qty};
-}
-function setEl(id,text,color){var el=document.getElementById(id);if(!el)return;el.textContent=text;if(color)el.style.color=color;}
-
-function renderStats(){
-  var mn=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
-  document.getElementById('monthLabel').textContent=currentYear+'年'+(currentMonth+1)+'月';
-  var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').replace(/\//g,'-').slice(0,7)===mn;});
-  var sellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').replace(/\//g,'-').slice(0,7)===mn;});
-  var buyT=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
-  var sellT=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
-  var feeT=sellRecs.reduce(function(s,r){return s+(r.fee||0);},0);
-  var shipT=sellRecs.reduce(function(s,r){return s+(r.shipping||0);},0);
-  var packT=sellRecs.reduce(function(s,r){return s+(r.packing||0);},0);
-  var gross=sellT-buyT;var net=gross-feeT-shipT-packT;var margin=sellT>0?Math.round((gross/sellT)*100):0;
-  setEl('statSell','¥'+Math.round(sellT).toLocaleString());
-  setEl('statSellCnt',sellRecs.length+'件　仕入 ¥'+Math.round(buyT).toLocaleString()+'（'+buyRecs.length+'件）');
-  setEl('statBuy','¥'+Math.round(buyT).toLocaleString());
-  setEl('statBuyCnt',buyRecs.length+'');
-  var pEl=document.getElementById('statProfit');if(pEl){pEl.textContent=(gross>=0?'+':'')+'¥'+Math.round(gross).toLocaleString();pEl.style.color=gross>=0?'#a78bfa':'#ff4d4d';}
-  setEl('statMargin','利益率 '+margin+'%');
-  var nEl=document.getElementById('statNet');if(nEl){nEl.textContent=(net>=0?'+':'')+'¥'+Math.round(net).toLocaleString();nEl.style.color=net>=0?'#34d399':'#ff4d4d';}
-  setEl('statNetSub','経費（手数料+送料+梱包） ¥'+Math.round(feeT+shipT+packT).toLocaleString());
-  var endOfMonth=new Date(currentYear,currentMonth+1,0);
-  var endStr=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(endOfMonth.getDate()).padStart(2,'0');
-  var stk=calcStockAt(endStr);setEl('statStock','¥'+Math.round(stk.val).toLocaleString());setEl('statStockCnt','残 '+stk.qty+'点');
-  var cumMnPrefix=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
-  var cumSell=records.filter(function(r){var d=(r.date||'').replace(/\//g,'-');return r.type==='sell'&&d.slice(0,7)<=cumMnPrefix;}).reduce(function(s,r){return s+(r.price||0);},0);
-  var cumBuy=records.filter(function(r){var d=(r.date||'').replace(/\//g,'-');return r.type==='buy'&&d.slice(0,7)<=cumMnPrefix;}).reduce(function(s,r){return s+(r.total||0);},0);
-  var cumExp=records.filter(function(r){var d=(r.date||'').replace(/\//g,'-');return r.type==='sell'&&d.slice(0,7)<=cumMnPrefix;}).reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
-  var balance=cumSell-cumBuy-cumExp;
-  var cfEl=document.getElementById('statCF');if(cfEl){cfEl.textContent=(balance>=0?'+':'')+'¥'+Math.round(balance).toLocaleString();cfEl.style.color=balance>=0?'#00c896':'#ff4d4d';}
-  setEl('statCFSub','累計売上 ¥'+Math.round(cumSell).toLocaleString()+'　累計仕入 ¥'+Math.round(cumBuy).toLocaleString()+'　累計経費 ¥'+Math.round(cumExp).toLocaleString());
-  var yrStr=String(currentYear);
-  document.getElementById('annualTitle').textContent='📅 '+currentYear+'年 年間トータル';
-  var aBuyR=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(yrStr);});
-  var aSellR=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(yrStr);});
-  var aBuyT=aBuyR.reduce(function(s,r){return s+(r.total||0);},0);
-  var aSellT=aSellR.reduce(function(s,r){return s+(r.price||0);},0);
-  var aExp=aSellR.reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
-  var aGross=aSellT-aBuyT;var aNet=aGross-aExp;var aMargin=aSellT>0?Math.round((aGross/aSellT)*100):0;
-  var aEndStr=yrStr+'-12-31';var aStkEnd=calcStockAt(aEndStr);
-  setEl('annSell','¥'+Math.round(aSellT).toLocaleString());setEl('annSellCnt',aSellR.length+'件');
-  setEl('annBuy','¥'+Math.round(aBuyT).toLocaleString());setEl('annBuyCnt',aBuyR.length+'件');
-  var apEl=document.getElementById('annProfit');if(apEl){apEl.textContent=(aGross>=0?'+':'')+'¥'+Math.round(aGross).toLocaleString();apEl.style.color=aGross>=0?'#a78bfa':'#ff4d4d';}
-  setEl('annMargin','利益率 '+aMargin+'%');
-  var anEl=document.getElementById('annNet');if(anEl){anEl.textContent=(aNet>=0?'+':'')+'¥'+Math.round(aNet).toLocaleString();anEl.style.color=aNet>=0?'#34d399':'#ff4d4d';}
-  setEl('annNetSub','経費 ¥'+Math.round(aExp).toLocaleString());
-  var aCFEl=document.getElementById('annCF');if(aCFEl){aCFEl.textContent=(aNet>=0?'+':'')+'¥'+Math.round(aNet).toLocaleString();aCFEl.style.color=aNet>=0?'#00c896':'#ff4d4d';}
-  setEl('annCFSub','年間純利益ベース');
-  setEl('annStock','¥'+Math.round(aStkEnd.val).toLocaleString());setEl('annStockCnt','残 '+aStkEnd.qty+'点');
-  renderChart();updateSummary();
+  updateUploadUI();
+  if (method === 'manual') showManualForm();
 }
 
-function renderChart(){
-  var container=document.getElementById('chartBars');container.innerHTML='';
-  var months=[];
-  for(var i=5;i>=0;i--){var m=currentMonth-i,y=currentYear;while(m<0){m+=12;y--;}months.push({y:y,m:m});}
-  var data=months.map(function(mo){
-    var mn=mo.y+'-'+String(mo.m+1).padStart(2,'0');
-    var b=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);}).reduce(function(s,r){return s+(r.total||0);},0);
-    var s=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);}).reduce(function(s,r){return s+(r.price||0);},0);
-    return{label:(mo.m+1)+'月',buy:b,sell:s};
-  });
-  var maxVal=1;data.forEach(function(d){maxVal=Math.max(maxVal,d.buy,d.sell);});
-  var H=90;
-  data.forEach(function(d){
-    var grp=document.createElement('div');grp.className='chart-bar-group';
-    var vl=document.createElement('div');vl.className='chart-val-label';vl.textContent=d.sell>0?'¥'+(d.sell/10000).toFixed(1)+'万':'';
-    var pair=document.createElement('div');pair.className='chart-bar-pair';
-    var bh=Math.max(3,Math.round((d.buy/maxVal)*H));var sh=Math.max(3,Math.round((d.sell/maxVal)*H));
-    var bb=document.createElement('div');bb.className='chart-bar buy-bar';bb.style.height=bh+'px';
-    var sb=document.createElement('div');sb.className='chart-bar sell-bar';sb.style.height=sh+'px';
-    pair.appendChild(bb);pair.appendChild(sb);
-    var lbl=document.createElement('div');lbl.className='chart-month-label';lbl.textContent=d.label;
-    grp.appendChild(vl);grp.appendChild(pair);grp.appendChild(lbl);
-    container.appendChild(grp);
-  });
+function setMethod(m) {
+  method = m;
+  document.getElementById('mPhoto').className = 'mbtn' + (m === 'photo' ? ' active' : '');
+  document.getElementById('mManual').className = 'mbtn' + (m === 'manual' ? ' active' : '');
+  document.getElementById('uploadZone').style.display = m === 'photo' ? '' : 'none';
+  document.getElementById('previewWrap').className = 'preview-wrap';
+  document.getElementById('aiBtn').style.display = m === 'photo' ? '' : 'none';
+  clearError();
+  if (m === 'manual') { imgBase64 = null; showManualForm(); }
+  else hideForm();
 }
 
-// ── モード切替 ────────────────────────────────────────────
-function setMode(m){
-  mode=m;
-  document.getElementById('mtBuy').className='mtab'+(m==='buy'?' act-buy':'');
-  document.getElementById('mtSell').className='mtab'+(m==='sell'?' act-sell':'');
-  document.getElementById('mtStock').className='mtab'+(m==='stock'?' act-stock':'');
-  document.getElementById('mtStats').className='mtab'+(m==='stats'?' act-stats':'');
-  document.getElementById('mtBulk').className='mtab'+(m==='bulk'?' act-buy':'');
-  var isEntry=m==='buy'||m==='sell';
-  document.getElementById('inputArea').style.display=isEntry?'':'none';
-  document.getElementById('stockPanel').className='stock-panel'+(m==='stock'?' show':'');
-  document.getElementById('statsPanel').className='stats-panel'+(m==='stats'?' show':'');
-  document.getElementById('bulkPanel').className='bulk-panel'+(m==='bulk'?' show':'');
-  if(isEntry){
-    document.documentElement.style.setProperty('--accent',m==='buy'?'#f5c518':'#00c896');
-    platform=m==='buy'?'カードショップ':'Amazon';
-    var row=document.getElementById('platformRow');row.innerHTML='';
-    PLATFORMS[m].forEach(function(p){var b=document.createElement('button');b.className='pchip'+(p===platform?' sel':'');b.textContent=p;b.onclick=function(){selectPlatform(p,b);};row.appendChild(b);});
-    document.getElementById('janResult').style.display='none';
-    document.getElementById('janInput').value='';
-    hideAlert();renderForm();
-  }else if(m==='stock'){renderStock();}
-  else if(m==='stats'){renderStats();updateSummary();}
-  else if(m==='bulk'){bulkType='buy';renderBulk();}
+function updateUploadUI() {
+  var isBuy = mode === 'buy';
+  document.getElementById('uIcon').textContent = isBuy ? '🧾' : '📱';
+  document.getElementById('uTitle').textContent = isBuy
+    ? '領収書・レシートをドロップ、またはタップ'
+    : '注文完了画面・取引画面のスクショをドロップ';
+  document.getElementById('uSub').textContent = platform
+    ? platform + 'の画面をアップロード'
+    : (isBuy ? '仕入れ時の領収書・レシート' : '販売プラットフォームの注文画面');
 }
-function selectPlatform(p,el){platform=p;document.querySelectorAll('.pchip').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');renderForm();}
 
-// ── 在庫アラート ──────────────────────────────────────────
-function checkStockAlert(itemName,sellQty){
-  if(mode!=='sell')return;
-  var name=(itemName||'').trim();if(!name){hideAlert();return;}
-  var stock=calcStock();var entry=stock[name];if(!entry){hideAlert();return;}
-  var rem=entry.bought-entry.sold;var qty=parseFloat(sellQty)||1;
-  var alertEl=document.getElementById('stockAlert');var msgEl=document.getElementById('stockAlertMsg');
-  if(rem<=0){msgEl.textContent='「'+name+'」の在庫は0です。';alertEl.className='alert warn';setAddBtnDisabled(true);}
-  else if(qty>rem){msgEl.textContent='「'+name+'」の在庫は'+rem+'個です。販売数が超えています。';alertEl.className='alert warn';setAddBtnDisabled(true);}
-  else if(rem-qty<=2){msgEl.textContent='「'+name+'」の残り在庫は'+(rem-qty)+'個になります。';alertEl.className='alert info';setAddBtnDisabled(false);}
-  else{hideAlert();setAddBtnDisabled(false);}
+// ── ファイル処理 ──────────────────────────────────────────
+var zone = document.getElementById('uploadZone');
+var fileInput = document.getElementById('fileInput');
+zone.addEventListener('click', function() { fileInput.click(); });
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', function() { zone.classList.remove('drag'); });
+zone.addEventListener('drop', function(e) { e.preventDefault(); zone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var src = ev.target.result;
+    imgBase64 = src.split(',')[1];
+    document.getElementById('previewImg').src = src;
+    document.getElementById('previewWrap').classList.add('show');
+    document.getElementById('aiBtn').disabled = false;
+    hideForm(); clearError();
+  };
+  reader.readAsDataURL(file);
 }
-function hideAlert(){document.getElementById('stockAlert').className='alert';setAddBtnDisabled(false);}
-function setAddBtnDisabled(v){document.getElementById('addBtn').disabled=v;}
+
+function clearImage() {
+  imgBase64 = null; fileInput.value = '';
+  document.getElementById('previewWrap').classList.remove('show');
+  document.getElementById('previewImg').src = '';
+  document.getElementById('aiBtn').disabled = true;
+  hideForm(); clearError();
+}
+
+// ── AI読み取り ────────────────────────────────────────────
+async function analyze() {
+  if (!imgBase64) return;
+  clearError();
+  var btn = document.getElementById('aiBtn'), sp = document.getElementById('spinner'), txt = document.getElementById('aiBtnTxt');
+  btn.disabled = true; sp.style.display = 'block'; txt.textContent = 'AIが読み取り中...';
+  var today = new Date().toISOString().slice(0, 10);
+  var isBuy = mode === 'buy';
+  var platHint = platform ? 'プラットフォーム: ' + platform : '';
+  var catList = CATEGORIES.join('、');
+  var sysPrompt = isBuy
+    ? 'あなたはトレードカード仕入れ帳簿AIです。' + platHint + '。領収書・レシート画像から情報を抽出し、JSONのみを返してください（マークダウン不要）。\n形式: {"date":"YYYY-MM-DD","shop":"店名","item":"商品名","category":"カテゴリ","unit_price":数値,"qty":数値,"total":数値,"memo":""}\nカテゴリは次から選択: ' + catList + '\n不明は""か0。日付不明は"' + today + '"。'
+    : 'あなたはトレードカード販売帳簿AIです。' + platHint + 'の注文・取引画面から情報を抽出し、JSONのみを返してください（マークダウン不要）。\n形式: {"date":"YYYY-MM-DD","order_id":"","item":"商品名","category":"カテゴリ","price":数値,"fee":数値,"shipping":数値,"packing":数値,"cost":数値,"memo":""}\nカテゴリは次から選択: ' + catList + '\n手数料: Amazon≒10-15%, メルカリ≒10%, ヤフオク≒8-10%。不明は0。日付不明は"' + today + '"。';
+  try {
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:1000, system:sysPrompt,
+        messages:[{role:"user", content:[
+          {type:"image", source:{type:"base64", media_type:"image/jpeg", data:imgBase64}},
+          {type:"text", text:"この画像から情報を抽出してJSONで返してください。"}
+        ]}]})
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    var raw = data.content.find(function(b){return b.type==='text';}); raw = raw ? raw.text : '';
+    var clean = raw.replace(/```json|```/g, '').trim();
+    renderForm(JSON.parse(clean), false);
+  } catch(e) {
+    showError('読み取りに失敗しました。画像が不鮮明な場合は撮り直してみてください（' + e.message + '）');
+  } finally {
+    btn.disabled = false; sp.style.display = 'none'; txt.textContent = '📸 AIで自動読み取り';
+  }
+}
 
 // ── フォーム描画 ──────────────────────────────────────────
-function renderForm(){
-  var isBuy=mode==='buy';
-  document.getElementById('platBadge').textContent=platform+(isBuy?' 仕入れ':' 販売');
-  document.getElementById('platBadge').className='plat-badge '+(isBuy?'pb-buy':'pb-sell');
-  document.getElementById('addBtn').className='add-btn '+(isBuy?'buy':'sell');
-  document.getElementById('addBtn').disabled=false;
-  var grid=document.getElementById('fieldGrid');grid.innerHTML='';
-  var today=new Date().toISOString().slice(0,10);
-  FIELDS[mode].forEach(function(f){
-    var wrap=document.createElement('div');wrap.className='fi'+(f.full?' full':'');
-    var lbl=document.createElement('label');
-    lbl.textContent=(f.labelAlt&&f.labelAlt[platform])?f.labelAlt[platform]:f.label;
-    if(f.isDefault&&isBuy){var db=document.createElement('span');db.className='default-badge';db.textContent='デフォルト';lbl.appendChild(db);}
+function showManualForm() { renderForm({}, true); }
+function hideForm() { document.getElementById('formPanel').classList.remove('show'); }
+
+function renderForm(parsed, isManual) {
+  var isBuy = mode === 'buy';
+  document.getElementById('panelLabel').textContent = isManual
+    ? '手入力フォーム — 空欄は後から修正できます'
+    : '読み取り結果 — 確認・修正してから追加';
+  document.getElementById('platBadge').textContent = platform + (isBuy ? ' 仕入れ' : ' 販売');
+  document.getElementById('platBadge').className = 'plat-badge ' + (isBuy ? 'pb-buy' : 'pb-sell');
+  document.getElementById('addBtn').className = 'add-btn ' + (isBuy ? 'buy' : 'sell');
+
+  var grid = document.getElementById('fieldGrid');
+  grid.innerHTML = '';
+  var today = new Date().toISOString().slice(0, 10);
+
+  FIELDS[mode].forEach(function(f) {
+    var wrap = document.createElement('div');
+    wrap.className = 'fi' + (f.full ? ' full' : '');
+
+    // Label
+    var lbl = document.createElement('label');
+    lbl.textContent = f.label;
+    if (f.isDefault && isBuy) {
+      var db = document.createElement('span');
+      db.className = 'default-badge'; db.textContent = 'デフォルト';
+      lbl.appendChild(db);
+    }
     wrap.appendChild(lbl);
-    var inner=document.createElement('div');inner.className='fi-inner';
-    if(f.type==='shop'){
-      var sw=document.createElement('div');sw.className='shop-wrap';
-      var shopSuggestions={'カードショップ':['イージーゲームズ','トレカパーク','カードラッシュ','トレトク','駿河屋','まんだらけ','その他'],'Amazon':['Amazon'],'メルカリ':['メルカリ'],'ヤフオク':['ヤフオク'],'その他通販':['楽天','Yahoo!ショッピング','駿河屋','その他'],'直接購入':['個人','友人','その他']};
-      var inp=document.createElement('input');inp.type='text';inp.id='f_shop';
-      inp.value=platform||'';inp.placeholder='店名を入力または履歴から選択';inp.autocomplete='off';
-      var dd=document.createElement('div');dd.className='shop-dd';dd.id='shopDD';
-      function refreshDD(){
-        dd.innerHTML='';var val=inp.value.trim().toLowerCase();
-        var platSuggs=shopSuggestions[platform]||[];
-        var allSuggs=platSuggs.concat(shopHistory.filter(function(s){return platSuggs.indexOf(s)===-1;}));
-        var filtered=allSuggs.filter(function(s){return !val||s.toLowerCase().indexOf(val)!==-1;});
-        if(inp.value.trim()&&allSuggs.indexOf(inp.value.trim())===-1){
-          var no=document.createElement('div');no.className='shop-opt';
-          no.innerHTML='<span>'+inp.value.trim()+'</span><span class="shop-new">新規追加</span>';
-          no.onmousedown=function(e){e.preventDefault();dd.classList.remove('open');};dd.appendChild(no);
+
+    var inner = document.createElement('div');
+    inner.className = 'fi-inner';
+
+    // ── shop型: カスタムコンボボックス ──
+    if (f.type === 'shop') {
+      var shopWrap = document.createElement('div');
+      shopWrap.className = 'shop-wrap';
+
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.id = 'f_shop';
+      inp.value = parsed['shop'] || platform || '';
+      inp.placeholder = '店名を入力、または履歴から選択';
+      inp.autocomplete = 'off';
+
+      var dd = document.createElement('div');
+      dd.className = 'shop-dropdown'; dd.id = 'shopDropdown';
+
+      function refreshDropdown() {
+        dd.innerHTML = '';
+        var val = inp.value.trim().toLowerCase();
+        var filtered = shopHistory.filter(function(s) {
+          return s.toLowerCase().indexOf(val) !== -1;
+        });
+        // 入力値が履歴にない場合、新規追加の選択肢を表示
+        if (inp.value.trim() && shopHistory.indexOf(inp.value.trim()) === -1) {
+          var newOpt = document.createElement('div');
+          newOpt.className = 'shop-opt';
+          newOpt.innerHTML = '<span class="shop-opt-name">' + inp.value.trim() + '</span><span class="shop-new-badge">新規追加</span>';
+          newOpt.onmousedown = function(e) { e.preventDefault(); inp.value = inp.value.trim(); dd.classList.remove('open'); };
+          dd.appendChild(newOpt);
         }
-        filtered.forEach(function(s){
-          var opt=document.createElement('div');opt.className='shop-opt';
-          var ns=document.createElement('span');ns.textContent=s;
-          var isHist=shopHistory.indexOf(s)!==-1&&platSuggs.indexOf(s)===-1;
-          if(isHist){var del=document.createElement('button');del.className='shop-opt-del';del.textContent='削除';del.type='button';del.onmousedown=function(e){e.preventDefault();e.stopPropagation();shopHistory=shopHistory.filter(function(x){return x!==s;});refreshDD();};opt.appendChild(ns);opt.appendChild(del);}
-          else{opt.appendChild(ns);}
-          opt.onmousedown=function(e){e.preventDefault();inp.value=s;dd.classList.remove('open');};
+        filtered.forEach(function(s) {
+          var opt = document.createElement('div');
+          opt.className = 'shop-opt';
+          var nameSpan = document.createElement('span'); nameSpan.className = 'shop-opt-name'; nameSpan.textContent = s;
+          var delBtn = document.createElement('button'); delBtn.className = 'shop-opt-del'; delBtn.textContent = '削除'; delBtn.type = 'button';
+          delBtn.onmousedown = function(e) {
+            e.preventDefault(); e.stopPropagation();
+            removeShopHistory(s); refreshDropdown();
+          };
+          opt.onmousedown = function(e) { e.preventDefault(); inp.value = s; dd.classList.remove('open'); };
+          opt.appendChild(nameSpan); opt.appendChild(delBtn);
           dd.appendChild(opt);
         });
-        dd.classList.toggle('open',filtered.length>0||dd.children.length>0);
+        dd.classList.toggle('open', dd.children.length > 0);
       }
-      inp.addEventListener('focus',refreshDD);inp.addEventListener('input',refreshDD);
-      inp.addEventListener('blur',function(){setTimeout(function(){dd.classList.remove('open');},150);});
-      sw.appendChild(inp);sw.appendChild(dd);inner.appendChild(sw);
-    }else if(f.type==='item'){
-      var iw=document.createElement('div');iw.className='suggest-wrap';
-      var itemInp=document.createElement('input');itemInp.type='text';itemInp.id='f_item';
-      itemInp.placeholder='商品名（カード名）';itemInp.autocomplete='off';
-      var idd=document.createElement('div');idd.className='suggest-dd';idd.id='itemDD';
-      function refreshItemDD(){
-        idd.innerHTML='';var val=itemInp.value.trim().toLowerCase();
-        var stk=calcStock();
-        var items=Object.values(stk).filter(function(e){return !val||e.name.toLowerCase().indexOf(val)!==-1;});
-        if(mode==='sell')items.sort(function(a,b){return(b.bought-b.sold)-(a.bought-a.sold);});
-        else items.sort(function(a,b){return a.name.localeCompare(b.name,'ja');});
-        items.forEach(function(e){
-          var rem=e.bought-e.sold;
-          var opt=document.createElement('div');opt.className='suggest-opt';
-          var ns=document.createElement('span');ns.textContent=e.name;
-          var tag=document.createElement('span');
-          tag.className='stock-tag '+(rem<=0?'stock-none':rem<=2?'stock-low':'stock-ok');
-          tag.textContent='在庫 '+rem;
-          opt.onmousedown=function(ev){
-            ev.preventDefault();itemInp.value=e.name;idd.classList.remove('open');
-            var qEl=document.getElementById('f_qty');checkStockAlert(e.name,qEl?qEl.value:1);
-            if(mode==='sell'){var stk2=calcStock();var entry2=stk2[e.name];if(entry2&&entry2.avgCost)autoCostForItem=Math.round(entry2.avgCost);}
-          };
-          opt.appendChild(ns);opt.appendChild(tag);idd.appendChild(opt);
-        });
-        idd.classList.toggle('open',items.length>0);
-      }
-      itemInp.addEventListener('focus',refreshItemDD);
-      itemInp.addEventListener('input',function(){refreshItemDD();var qEl=document.getElementById('f_qty');checkStockAlert(itemInp.value,qEl?qEl.value:1);});
-      itemInp.addEventListener('blur',function(){setTimeout(function(){idd.classList.remove('open');},150);});
-      iw.appendChild(itemInp);iw.appendChild(idd);inner.appendChild(iw);
-    }else{
-      var el2=document.createElement('input');el2.type=f.type;el2.id='f_'+f.key;
-      el2.value=f.key==='date'?today:'';
-      el2.placeholder=f.skippable?'不明は空欄でOK':'';
-      if(f.type==='number')el2.inputMode='numeric';
-      if(f.key==='qty'&&mode==='sell'){el2.addEventListener('input',function(){var itemEl=document.getElementById('f_item');checkStockAlert(itemEl?itemEl.value:'',el2.value);});}
+
+      inp.addEventListener('focus', refreshDropdown);
+      inp.addEventListener('input', refreshDropdown);
+      inp.addEventListener('blur', function() { setTimeout(function(){ dd.classList.remove('open'); }, 150); });
+
+      shopWrap.appendChild(inp); shopWrap.appendChild(dd);
+      inner.appendChild(shopWrap);
+
+    // ── セレクト型 ──
+    } else if (f.type === 'sel') {
+      var el = document.createElement('select'); el.id = 'f_' + f.key;
+      CATEGORIES.forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
+        if (parsed[f.key] === o) opt.selected = true;
+        el.appendChild(opt);
+      });
+      inner.appendChild(el);
+
+    // ── 通常input ──
+    } else {
+      var el2 = document.createElement('input');
+      el2.type = f.type; el2.id = 'f_' + f.key;
+      if (f.key === 'date') el2.value = parsed[f.key] || today;
+      else if (f.type === 'number') el2.value = (parsed[f.key] !== undefined && parsed[f.key] !== 0) ? parsed[f.key] : '';
+      else el2.value = parsed[f.key] || '';
+      el2.placeholder = f.skippable ? '不明は空欄でOK' : '';
       inner.appendChild(el2);
     }
-    if(f.skippable){
-      var skip=document.createElement('button');skip.className='skip-btn';skip.textContent='スキップ';skip.type='button';
-      skip.onclick=function(){var t=document.getElementById(f.type==='shop'?'f_shop':f.type==='item'?'f_item':'f_'+f.key);if(t)t.value='';skip.textContent=skip.textContent==='スキップ'?'入力する':'スキップ';};
+
+    // スキップボタン
+    if (f.skippable) {
+      var skip = document.createElement('button');
+      skip.className = 'skip-btn'; skip.textContent = 'スキップ'; skip.type = 'button';
+      skip.onclick = function() {
+        var target = document.getElementById('f_' + f.key) || document.getElementById('f_shop');
+        if (target) target.value = '';
+        skip.classList.toggle('skipped');
+        skip.textContent = skip.classList.contains('skipped') ? '入力する' : 'スキップ';
+      };
       inner.appendChild(skip);
     }
+
     wrap.appendChild(inner);
-    if(f.key==='total'){
-      var hint=document.createElement('div');hint.className='auto-hint';hint.textContent='単価×数量で自動計算（手動入力も可）';wrap.appendChild(hint);
-      setTimeout(function(){var up=document.getElementById('f_unit_price'),q=document.getElementById('f_qty'),t=document.getElementById('f_total');if(up&&q&&t){var calc=function(){var u=parseFloat(up.value)||0,n=parseFloat(q.value)||0;if(u&&n)t.value=u*n;};up.addEventListener('input',calc);q.addEventListener('input',calc);}},0);
+
+    // 合計の自動計算ヒント
+    if (f.key === 'total') {
+      var hint = document.createElement('div');
+      hint.className = 'auto-hint'; hint.textContent = '単価×数量で自動計算（手動入力も可）';
+      wrap.appendChild(hint);
+      setTimeout(function() {
+        var upEl = document.getElementById('f_unit_price');
+        var qEl  = document.getElementById('f_qty');
+        var tEl  = document.getElementById('f_total');
+        if (upEl && qEl && tEl) {
+          var calc = function() { var u=parseFloat(upEl.value)||0, q=parseFloat(qEl.value)||0; if(u&&q) tEl.value=u*q; };
+          upEl.addEventListener('input', calc); qEl.addEventListener('input', calc);
+        }
+      }, 0);
     }
+
     grid.appendChild(wrap);
   });
+
+  document.getElementById('formPanel').classList.add('show');
 }
 
 // ── 記録追加 ──────────────────────────────────────────────
-function addRecord(){
-  if(document.getElementById('addBtn').disabled)return;
-  var obj={type:mode,platform:platform||'不明'};
-  FIELDS[mode].forEach(function(f){
-    var id=f.type==='shop'?'f_shop':f.type==='item'?'f_item':'f_'+f.key;
-    var el=document.getElementById(id);if(!el)return;
-    obj[f.key]=f.type==='number'?(parseFloat(el.value)||0):el.value;
+function addRecord() {
+  var obj = { type: mode, platform: platform || '不明' };
+  FIELDS[mode].forEach(function(f) {
+    var id = f.type === 'shop' ? 'f_shop' : 'f_' + f.key;
+    var el = document.getElementById(id);
+    if (!el) return;
+    obj[f.key] = f.type === 'number' ? (parseFloat(el.value) || 0) : el.value;
   });
-  if(mode==='sell'){
-    obj.fee=Math.round((obj.price||0)*0.1);
-    var stk3=calcStock();var entry3=stk3[(obj.item||'').trim()];
-    obj.cost=entry3&&entry3.avgCost?Math.round(entry3.avgCost):0;
-    var rem=getStockOf(obj.item);if(rem!==Infinity&&(parseFloat(obj.qty)||1)>rem){checkStockAlert(obj.item,obj.qty);return;}
-  }
-  if(obj.shop&&obj.shop.trim()&&shopHistory.indexOf(obj.shop.trim())===-1)shopHistory.push(obj.shop.trim());
-  obj._localId=Date.now();
+  // 店名を履歴に追加
+  if (obj.shop && obj.shop.trim()) addShopHistory(obj.shop.trim());
   records.push(obj);
-  renderRecords();updateSummary();hideAlert();
-  document.getElementById('exportBtn').disabled=false;
-  FIELDS[mode].forEach(function(f){if(f.key==='date')return;var id=f.type==='shop'?'f_shop':f.type==='item'?'f_item':'f_'+f.key;var el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('janInput').value='';
-  document.getElementById('janResult').style.display='none';
-  syncToGAS(obj);
+  renderRecords(); hideForm(); clearImage();
+  if (method === 'manual') showManualForm();
+  document.getElementById('exportBtn').disabled = false;
+  updateSummary();
 }
 
-// ── GAS同期（オフラインキュー対応）────────────────────────
-function syncToGAS(record){
-  setSyncBadge('⏳ 同期中...','#888');
-  fetch(GAS_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'add',record:record})
-  })
-  .then(function(r){return r.json();})
-  .then(function(res){
-    if(res.ok){
-      if(record._gasId===undefined)record._gasId=res.id;
-      setSyncBadge('✓ 同期済み','#00c896');
-    }else{
-      setSyncBadge('⚠ 失敗','#f5c518');
-      addToQueue(record);
-    }
-    setTimeout(function(){setSyncBadge('','');},3000);
-  })
-  .catch(function(){
-    setSyncBadge('⚠ オフライン','#f5c518');
-    addToQueue(record);
-    setTimeout(function(){setSyncBadge('','');},3000);
-  });
+function removeRecord(idx) {
+  records.splice(idx, 1);
+  renderRecords(); updateSummary();
+  if (records.length === 0) document.getElementById('exportBtn').disabled = true;
 }
 
-// ★ オフラインキュー管理
-function addToQueue(record){
-  offlineQueue.push(record);
-  updateQueueBadge();
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.rfil').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on'); renderRecords();
 }
-function updateQueueBadge(){
-  var el=document.getElementById('queueBadge');
-  if(offlineQueue.length>0){
-    el.textContent='📤 未同期 '+offlineQueue.length+'件';
-    el.className='queue-badge show';
-    el.onclick=flushQueue;
-    el.style.cursor='pointer';
-    el.title='タップして再送信';
-  }else{
-    el.className='queue-badge';
-    el.onclick=null;
+
+function renderRecords() {
+  document.getElementById('recCnt').textContent = records.length + '件';
+  var list = document.getElementById('recList');
+  var filtered = currentFilter === 'all' ? records : records.filter(function(r){return r.type===currentFilter;});
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-big">📋</div>' + (records.length ? 'フィルター条件に一致しません' : 'まだ記録がありません') + '</div>';
+    return;
   }
-}
-function flushQueue(){
-  if(!offlineQueue.length)return;
-  setSyncBadge('⏳ 再送信中...','#888');
-  var total=offlineQueue.length;var done=0;var failed=[];
-  offlineQueue.forEach(function(record){
-    fetch(GAS_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'add',record:record})
-    })
-    .then(function(r){return r.json();})
-    .then(function(res){
-      done++;
-      if(!res.ok)failed.push(record);
-      if(done>=total){
-        offlineQueue=failed;
-        updateQueueBadge();
-        setSyncBadge(failed.length===0?'✓ 全件同期完了':'⚠ '+(total-failed.length)+'/'+ total+'件成功', failed.length===0?'#00c896':'#f5c518');
-        setTimeout(function(){setSyncBadge('','');},3000);
-      }
-    })
-    .catch(function(){
-      done++;failed.push(record);
-      if(done>=total){offlineQueue=failed;updateQueueBadge();setSyncBadge('⚠ オフライン','#f5c518');setTimeout(function(){setSyncBadge('','');},3000);}
-    });
-  });
-}
-
-// ★ GASからデータ読み込み（列マッピング修正版）
-function loadFromGAS(){
-  setSyncBadge('⏳ 読込中...','#888');
-  fetch(GAS_URL+'?type=all')
-  .then(function(r){return r.json();})
-  .then(function(res){
-    records=[];
-    // ★ 仕入台帳: ID|仕入日|プラットフォーム|仕入先|商品名|仕入単価|数量|仕入合計|メモ|登録日時
-    (res.buy||[]).forEach(function(r){
-      var rawDate=String(r['仕入日']||'');
-      var cleanDate=rawDate.replace(/T.*/,'').replace(/\//g,'-').slice(0,10);
-      records.push({
-        type:'buy',
-        _gasId:String(r['ID']||''),
-        date:cleanDate,
-        platform:String(r['プラットフォーム']||''),
-        shop:String(r['仕入先']||''),
-        item:String(r['商品名']||''),
-        unit_price:parseFloat(r['仕入単価'])||0,
-        qty:parseFloat(r['数量'])||0,
-        total:parseFloat(r['仕入合計'])||0,
-        memo:String(r['メモ']||'')
-      });
-    });
-    // ★ 販売台帳: ID|販売日|プラットフォーム|注文ID|商品名|販売価格|数量|手数料|送料|梱包費|仕入原価|純利益|メモ|登録日時
-    (res.sell||[]).forEach(function(r){
-      var rawDate=String(r['販売日']||'');
-      var cleanDate=rawDate.replace(/T.*/,'').replace(/\//g,'-').slice(0,10);
-      var price=parseFloat(r['販売価格'])||0;
-      var fee=parseFloat(r['手数料'])||Math.round(price*0.1);
-      records.push({
-        type:'sell',
-        _gasId:String(r['ID']||''),
-        date:cleanDate,
-        platform:String(r['プラットフォーム']||''),
-        order_id:String(r['注文ID']||''),
-        item:String(r['商品名']||''),
-        price:price,
-        qty:parseFloat(r['数量'])||1,
-        fee:fee,
-        shipping:parseFloat(r['送料'])||0,
-        packing:parseFloat(r['梱包費'])||0,
-        cost:parseFloat(r['仕入原価'])||0,
-        memo:String(r['メモ']||'')
-      });
-    });
-    renderRecords();updateSummary();
-    if(records.length>0)document.getElementById('exportBtn').disabled=false;
-    setSyncBadge('✓ '+records.length+'件','#00c896');
-    setTimeout(function(){setSyncBadge('','');},3000);
-  })
-  .catch(function(){
-    setSyncBadge('✓ '+records.length+'件','#00c896');
-    setTimeout(function(){setSyncBadge('','');},5000);
-  });
-}
-
-function setSyncBadge(t,c){var el=document.getElementById('syncBadge');el.textContent=t;el.style.color=c;el.style.display=t?'inline':'none';}
-
-// ── 在庫パネル ────────────────────────────────────────────
-function setStockFilter(f,el){stockFilter=f;document.querySelectorAll('.sfil').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderStock();}
-function renderStock(){
-  var stk=calcStock();var items=Object.values(stk);
-  var query=(document.getElementById('stockSearch')||{}).value||'';
-  if(query)items=items.filter(function(e){return e.name.toLowerCase().indexOf(query.toLowerCase())!==-1;});
-  if(stockFilter==='ok')items=items.filter(function(e){var r=e.bought-e.sold;return r>2;});
-  if(stockFilter==='low')items=items.filter(function(e){var r=e.bought-e.sold;return r>0&&r<=2;});
-  if(stockFilter==='out')items=items.filter(function(e){return e.bought-e.sold<=0;});
-  items.sort(function(a,b){return(a.bought-a.sold)-(b.bought-b.sold);});
-  var list=document.getElementById('stockList');
-  if(!items.length){list.innerHTML='<div class="stock-empty">📦 '+(Object.keys(calcStock()).length?'該当する商品がありません':'仕入れを記録すると在庫が表示されます')+'</div>';return;}
-  list.innerHTML='';
-  items.forEach(function(e){
-    var rem=e.bought-e.sold;var pct=e.bought>0?Math.min(100,Math.max(0,(rem/e.bought)*100)):0;
-    var status=rem<=0?'out':rem<=2?'low':'ok';
-    var div=document.createElement('div');div.className='stock-item'+(status==='out'?' out':status==='low'?' low':'');
-    div.innerHTML='<div class="si-top"><span class="si-name">'+e.name+'</span></div>'
-      +'<div class="si-stats"><div class="si-stat"><span class="si-stat-label">仕入</span><span class="si-stat-val in">'+e.bought+'</span></div>'
-      +'<div class="si-stat"><span class="si-stat-label">販売済</span><span class="si-stat-val out-v">'+e.sold+'</span></div>'
-      +'<div class="si-stat"><span class="si-stat-label">残り</span><span class="si-stat-val rem'+(rem<=0?' warn':'')+'">'+Math.max(0,rem)+'</span></div>'
-      +'<div class="si-stat"><span class="si-stat-label">在庫金額</span><span class="si-stat-val" style="color:#38bdf8;font-size:12px;">¥'+Math.round(Math.max(0,rem)*e.avgCost).toLocaleString()+'</span></div></div>'
-      +'<div class="si-bar"><div class="si-bar-fill '+status+'" style="width:'+pct+'%"></div></div>';
-    list.appendChild(div);
-  });
-}
-
-// ── 記録リスト ────────────────────────────────────────────
-function setFilter(f,el){currentFilter=f;document.querySelectorAll('.rfil').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderRecords();}
-function renderRecords(){
-  document.getElementById('recCnt').textContent=records.length+'件';
-  var list=document.getElementById('recList');
-  var filtered=currentFilter==='all'?records:records.filter(function(r){return r.type===currentFilter;});
-  if(!filtered.length){list.innerHTML='<div class="empty"><div class="empty-big">📋</div>'+(records.length?'該当なし':'まだ記録がありません')+'</div>';return;}
-  list.innerHTML='';
-  filtered.forEach(function(r){
-    var isBuy=r.type==='buy';
-    var amt=isBuy?(r.total?'¥'+Math.round(r.total).toLocaleString():'-'):(r.price?'¥'+Math.round(r.price).toLocaleString():'-');
-    var idx=records.indexOf(r);
-    var div=document.createElement('div');div.className='rec-item';
-    div.innerHTML='<div class="rtype '+(isBuy?'buy':'sell')+'">'+(isBuy?'🃏':'💴')+'</div>'
-      +'<div class="rname">'+(r.item||'(商品名なし)')+'</div>'
+  list.innerHTML = '';
+  filtered.forEach(function(r) {
+    var isBuy = r.type === 'buy';
+    var name = r.item || '(商品名なし)';
+    var amt = isBuy
+      ? (r.total ? '¥' + Math.round(r.total).toLocaleString() : '-')
+      : (r.price ? '¥' + Math.round(r.price).toLocaleString() : '-');
+    var idx = records.indexOf(r);
+    var div = document.createElement('div'); div.className = 'rec-item';
+    div.innerHTML = '<div class="rtype '+(isBuy?'buy':'sell')+'">'+(isBuy?'🃏':'💴')+'</div>'
+      +'<div class="rname">'+name+'</div>'
       +'<div class="rplat">'+(r.platform||'')+'</div>'
       +'<div class="ramnt '+(isBuy?'buy':'sell')+'">'+amt+'</div>'
       +'<div class="rdate">'+(r.date||'-')+'</div>'
-      +'<button class="rec-edit" onclick="openEdit('+idx+')">✏️</button>'
       +'<button class="rdel" onclick="removeRecord('+idx+')">✕</button>';
     list.appendChild(div);
   });
 }
-function removeRecord(idx){records.splice(idx,1);renderRecords();updateSummary();if(!records.length)document.getElementById('exportBtn').disabled=true;}
-function updateSummary(){
-  var mn=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
-  var isStats=mode==='stats';
-  var buyRecs=isStats?records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);}):records.filter(function(r){return r.type==='buy';});
-  var sellRecs=isStats?records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);}):records.filter(function(r){return r.type==='sell';});
-  var buyT=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
-  var sellT=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
-  var profit=sellT-buyT;
-  document.getElementById('sBuy').textContent='¥'+Math.round(buyT).toLocaleString();
-  document.getElementById('sSell').textContent='¥'+Math.round(sellT).toLocaleString();
-  var pEl=document.getElementById('sProfit');
-  pEl.textContent=(profit>=0?'+':'')+'¥'+Math.round(profit).toLocaleString();
-  pEl.style.color=profit>=0?'#a78bfa':'#ff4d4d';
-  document.getElementById('summaryBar').className='summary'+(records.length?' show':'');
+
+function updateSummary() {
+  var buyT  = records.filter(function(r){return r.type==='buy';}).reduce(function(s,r){return s+(r.total||0);},0);
+  var sellT = records.filter(function(r){return r.type==='sell';}).reduce(function(s,r){return s+(r.price||0);},0);
+  var profit = sellT - buyT;
+  document.getElementById('sBuy').textContent  = '¥' + Math.round(buyT).toLocaleString();
+  document.getElementById('sSell').textContent = '¥' + Math.round(sellT).toLocaleString();
+  var pEl = document.getElementById('sProfit');
+  pEl.textContent = (profit >= 0 ? '+' : '') + '¥' + Math.round(profit).toLocaleString();
+  pEl.style.color = profit >= 0 ? '#a78bfa' : '#ff4d4d';
+  document.getElementById('summaryBar').className = 'summary-bar' + (records.length ? ' show' : '');
 }
 
-// ── 編集モーダル ──────────────────────────────────────────
-var editingIdx=-1;
-function openEdit(idx){
-  editingIdx=idx;var r=records[idx];var isBuy=r.type==='buy';
-  document.getElementById('modalTitle').textContent=isBuy?'🃏 仕入れ記録を編集':'💴 販売記録を編集';
-  var grid=document.getElementById('modalGrid');grid.innerHTML='';
-  FIELDS[r.type].forEach(function(f){
-    var wrap=document.createElement('div');wrap.className='fi'+(f.full?' full':'');
-    var lbl=document.createElement('label');lbl.textContent=(f.labelAlt&&f.labelAlt[r.platform])?f.labelAlt[r.platform]:f.label;
-    wrap.appendChild(lbl);
-    var inner=document.createElement('div');inner.className='fi-inner';
-    var el;
-    if(f.type==='shop'||f.type==='item'){el=document.createElement('input');el.type='text';el.id='edit_'+f.key;el.value=r[f.key]||'';}
-    else{el=document.createElement('input');el.type=f.type;el.id='edit_'+f.key;var val=r[f.key]!==undefined?r[f.key]:'';if(f.type==='date'&&val){val=String(val).replace(/\//g,'-');if(val.length===10)el.value=val;}else{el.value=val;}if(f.type==='number')el.inputMode='numeric';}
-    inner.appendChild(el);wrap.appendChild(inner);grid.appendChild(wrap);
-  });
-  document.getElementById('editModal').classList.remove('hidden');
-}
-function closeModal(){document.getElementById('editModal').classList.add('hidden');editingIdx=-1;}
-function saveEdit(){
-  if(editingIdx<0)return;var r=records[editingIdx];
-  FIELDS[r.type].forEach(function(f){var el=document.getElementById('edit_'+f.key);if(!el)return;r[f.key]=f.type==='number'?(parseFloat(el.value)||0):el.value;});
-  if(r.type==='sell')r.fee=Math.round((r.price||0)*0.1);
-  renderRecords();updateSummary();closeModal();
-  setSyncBadge('⏳ 同期中...','#888');
-  var action=r._gasId?'update':'add';
-  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,id:r._gasId,record:r})})
-  .then(function(res){return res.json();})
-  .then(function(res){setSyncBadge(res.ok?'✓ 同期済み':'⚠ 同期失敗',res.ok?'#00c896':'#f5c518');setTimeout(function(){setSyncBadge('','');},3000);})
-  .catch(function(){setSyncBadge('⚠ オフライン','#f5c518');addToQueue(r);setTimeout(function(){setSyncBadge('','');},3000);});
-}
-function deleteRecord(){
-  if(editingIdx<0)return;if(!confirm('この記録を削除しますか？'))return;
-  records.splice(editingIdx,1);renderRecords();updateSummary();
-  if(!records.length)document.getElementById('exportBtn').disabled=true;
-  closeModal();
-}
-document.addEventListener('DOMContentLoaded',function(){var modal=document.getElementById('editModal');if(modal)modal.addEventListener('click',function(e){if(e.target===this)closeModal();});});
-
-// ── 一括編集 ──────────────────────────────────────────────
-var bulkType='buy';
-var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
-var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'order_id',label:'注文ID',type:'text',w:'100px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
-function setBulkType(t){bulkType=t;document.getElementById('btBuy').className='btab'+(t==='buy'?' act-buy':'');document.getElementById('btSell').className='btab'+(t==='sell'?' act-sell':'');renderBulk();}
-function renderBulk(){
-  var cols=bulkType==='buy'?BUY_COLS:SELL_COLS;
-  var recs=records.filter(function(r){return r.type===bulkType;});
-  document.getElementById('bulkStatus').textContent=recs.length+'件';
-  var head=document.getElementById('bulkHead');head.innerHTML='';
-  var tr=document.createElement('tr');
-  var th0=document.createElement('th');th0.style.width='30px';
-  var chkAll=document.createElement('input');chkAll.type='checkbox';chkAll.className='bt-chk';
-  chkAll.onchange=function(){document.querySelectorAll('.row-chk').forEach(function(c){c.checked=chkAll.checked;});};
-  th0.appendChild(chkAll);tr.appendChild(th0);
-  cols.forEach(function(c){var th=document.createElement('th');th.textContent=c.label;th.style.minWidth=c.w;tr.appendChild(th);});
-  head.appendChild(tr);
-  var body=document.getElementById('bulkBody');body.innerHTML='';
-  recs.forEach(function(r){
-    var actualIdx=records.indexOf(r);
-    var row=document.createElement('tr');row.dataset.idx=actualIdx;
-    var td0=document.createElement('td');var chk=document.createElement('input');chk.type='checkbox';chk.className='bt-chk row-chk';td0.appendChild(chk);row.appendChild(td0);
-    cols.forEach(function(c){
-      var td=document.createElement('td');
-      var inp=document.createElement('input');inp.type='text';inp.className='bt-input';
-      inp.value=r[c.key]!==undefined?r[c.key]:'';
-      if(c.type==='number')inp.inputMode='numeric';
-      inp.dataset.col=c.key;inp.dataset.idx=actualIdx;
-      td.appendChild(inp);row.appendChild(td);
-    });
-    body.appendChild(row);
-  });
-}
-function bulkAddRow(){
-  var today=new Date().toISOString().slice(0,10);
-  var newRec={type:bulkType,platform:'カードショップ',date:today,item:'',qty:1,memo:''};
-  if(bulkType==='buy'){newRec.shop='';newRec.unit_price=0;newRec.total=0;}
-  else{newRec.price=0;newRec.fee=0;newRec.cost=0;newRec.order_id='';}
-  records.push(newRec);renderBulk();updateSummary();
-  document.getElementById('exportBtn').disabled=false;
-  var body=document.getElementById('bulkBody');if(body.lastChild)body.lastChild.scrollIntoView({behavior:'smooth',block:'end'});
-  setTimeout(function(){var inputs=body.querySelectorAll('.bt-input');if(inputs.length){var last=inputs[inputs.length-(bulkType==='buy'?6:5)];if(last)last.focus();}},100);
-}
-function bulkSave(){
-  var rows=document.getElementById('bulkBody').querySelectorAll('tr');
-  var updatedRecords=[];
-  rows.forEach(function(row){
-    var idx=parseInt(row.dataset.idx);if(isNaN(idx)||idx<0||idx>=records.length)return;
-    var r=records[idx];
-    row.querySelectorAll('[data-col]').forEach(function(inp){
-      var col=inp.dataset.col;
-      var colDef=(bulkType==='buy'?BUY_COLS:SELL_COLS).find(function(c){return c.key===col;});
-      r[col]=colDef&&colDef.type==='number'?(parseFloat(inp.value)||0):inp.value;
-    });
-    if(bulkType==='sell')r.fee=Math.round((r.price||0)*0.1);
-    updatedRecords.push(r);
-  });
-  renderRecords();updateSummary();
-  setSyncBadge('⏳ GASに同期中...','#888');
-  bulkSyncToGAS(updatedRecords,function(ok){
-    setSyncBadge(ok?'✓ 保存・同期完了':'✓ ローカル保存（GAS同期失敗）',ok?'#00c896':'#f5c518');
-    setTimeout(function(){setSyncBadge('','');},3000);
-    document.getElementById('bulkStatus').textContent=records.filter(function(r){return r.type===bulkType;}).length+'件（保存済み）';
-  });
-}
-function bulkSyncToGAS(recs,cb){
-  var total=recs.length;if(!total){cb(true);return;}
-  var done=0,failed=0;
-  recs.forEach(function(r){
-    var action=r._gasId?'update':'add';
-    fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,id:r._gasId,record:r})})
-    .then(function(res){return res.json();})
-    .then(function(res){if(res.ok)done++;else failed++;if(done+failed>=total)cb(failed===0);})
-    .catch(function(){failed++;if(done+failed>=total)cb(false);});
-  });
-}
-function bulkDeleteSelected(){
-  var checked=document.querySelectorAll('.row-chk:checked');
-  if(!checked.length){alert('削除する行を選択してください');return;}
-  if(!confirm(checked.length+'件を削除しますか？'))return;
-  var idxs=[];checked.forEach(function(c){idxs.push(parseInt(c.closest('tr').dataset.idx));});
-  idxs.sort(function(a,b){return b-a;});
-  idxs.forEach(function(i){if(i>=0&&i<records.length)records.splice(i,1);});
-  renderBulk();renderRecords();updateSummary();
-  if(!records.length)document.getElementById('exportBtn').disabled=true;
-}
+function showError(m) { var e=document.getElementById('errorMsg'); e.textContent=m; e.style.display='block'; }
+function clearError() { document.getElementById('errorMsg').style.display='none'; }
 
 // ── Excel出力 ─────────────────────────────────────────────
-function exportExcel(){
-  var wb=XLSX.utils.book_new();
-  var buyR=records.filter(function(r){return r.type==='buy';});
-  var sellR=records.filter(function(r){return r.type==='sell';});
-  if(buyR.length){var d=[['仕入日','プラットフォーム','仕入先','商品名','仕入単価','数量','仕入合計','メモ']];buyR.forEach(function(r){d.push([r.date,r.platform,r.shop,r.item,r.unit_price,r.qty,r.total,r.memo]);});var ws=XLSX.utils.aoa_to_sheet(d);XLSX.utils.book_append_sheet(wb,ws,'仕入台帳');}
-  if(sellR.length){var d2=[['販売日','プラットフォーム','注文ID','商品名','販売数','販売価格','手数料','送料','梱包費','仕入原価','純利益','メモ']];sellR.forEach(function(r){var p=(r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0);d2.push([r.date,r.platform,r.order_id,r.item,r.qty,r.price,r.fee,r.shipping,r.packing,r.cost,p,r.memo]);});var ws2=XLSX.utils.aoa_to_sheet(d2);XLSX.utils.book_append_sheet(wb,ws2,'販売台帳');}
-  var stk=calcStock();var stkItems=Object.values(stk);
-  if(stkItems.length){var d3=[['商品名','仕入数','販売済数','残在庫','平均仕入単価','在庫金額']];stkItems.sort(function(a,b){return(a.bought-a.sold)-(b.bought-b.sold);});stkItems.forEach(function(e){var rem=Math.max(0,e.bought-e.sold);d3.push([e.name,e.bought,e.sold,rem,Math.round(e.avgCost),Math.round(rem*e.avgCost)]);});var ws3=XLSX.utils.aoa_to_sheet(d3);XLSX.utils.book_append_sheet(wb,ws3,'在庫一覧');}
-  var now2=new Date();XLSX.writeFile(wb,'トレカ収支_'+now2.getFullYear()+String(now2.getMonth()+1).padStart(2,'0')+String(now2.getDate()).padStart(2,'0')+'.xlsx');
-}
+function exportExcel() {
+  var wb = XLSX.utils.book_new();
+  var buyRecs  = records.filter(function(r){return r.type==='buy';});
+  var sellRecs = records.filter(function(r){return r.type==='sell';});
 
-setMode('buy');
-loadFromGAS();
+  if (buyRecs.length) {
+    var data = [['仕入日','プラットフォーム','仕入先','商品名','カテゴリ','仕入単価','数量','仕入合計','メモ']];
+    buyRecs.forEach(function(r){ data.push([r.date,r.platform,r.shop,r.item,r.category,r.unit_price,r.qty,r.total,r.memo]); });
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{wch:12},{wch:12},{wch:16},{wch:28},{wch:16},{wch:12},{wch:8},{wch:12},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws, 'トレカ仕入台帳');
+  }
+
+  if (sellRecs.length) {
+    var data2 = [['販売日','プラットフォーム','注文ID','商品名','カテゴリ','販売価格','手数料','送料','梱包費','仕入原価','純利益','メモ']];
+    sellRecs.forEach(function(r) {
+      var p = (r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0);
+      data2.push([r.date,r.platform,r.order_id,r.item,r.category,r.price,r.fee,r.shipping,r.packing,r.cost,p,r.memo]);
+    });
+    var ws2 = XLSX.utils.aoa_to_sheet(data2);
+    ws2['!cols'] = [{wch:12},{wch:12},{wch:20},{wch:26},{wch:16},{wch:12},{wch:10},{wch:8},{wch:10},{wch:12},{wch:12},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws2, '販売台帳');
+
+    var allPlats = [];
+    sellRecs.forEach(function(r){ if(allPlats.indexOf(r.platform)===-1) allPlats.push(r.platform); });
+    allPlats.forEach(function(p) {
+      var rows = sellRecs.filter(function(r){return r.platform===p;});
+      if (!rows.length) return;
+      var pd = [['販売日','注文ID','商品名','カテゴリ','販売価格','手数料','送料','梱包費','仕入原価','純利益']];
+      rows.forEach(function(r){ var pr=(r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0); pd.push([r.date,r.order_id,r.item,r.category,r.price,r.fee,r.shipping,r.packing,r.cost,pr]); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pd), p.slice(0,28));
+    });
+  }
+
+  var buyT  = buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
+  var sellT = sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
+  var profT = sellRecs.reduce(function(s,r){return s+((r.price||0)-(r.fee||0)-(r.shipping||0)-(r.packing||0)-(r.cost||0));},0);
+  var sum = [['集計サマリー',''],['',''],['仕入合計',buyT],['販売合計',sellT],['純利益合計（概算）',profT],['仕入件数',buyRecs.length],['販売件数',sellRecs.length],['',''],['出力日時',new Date().toLocaleString('ja-JP')]];
+  var sws = XLSX.utils.aoa_to_sheet(sum); sws['!cols']=[{wch:22},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, sws, '集計');
+
+  var now = new Date();
+  XLSX.writeFile(wb, 'トレカ収支_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.xlsx');
+}
 </script>
 </body>
 </html>
