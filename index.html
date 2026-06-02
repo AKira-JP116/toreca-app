@@ -972,8 +972,21 @@ function saveEdit() {
     if (!el) return;
     r[f.key] = f.type === 'number' ? (parseFloat(el.value) || 0) : el.value;
   });
+  if(r.type==='sell') r.fee=Math.round((r.price||0)*0.1);
   renderRecords(); updateSummary();
   closeModal();
+  // GASに同期（delete+add）
+  if(r._gasId){
+    setSyncBadge('⏳ 同期中...','#888');
+    fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'delete',type:r.type,id:r._gasId})})
+    .then(function(){return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'add',record:r})});})
+    .then(function(res){return res.json();})
+    .then(function(res){
+      setSyncBadge(res.ok?'✓ 同期済み':'⚠ 同期失敗',res.ok?'#00c896':'#f5c518');
+      setTimeout(function(){setSyncBadge('','');},3000);
+    })
+    .catch(function(){setSyncBadge('⚠ オフライン','#f5c518');setTimeout(function(){setSyncBadge('','');},4000);});
+  }
 }
 
 function deleteRecord() {
@@ -1062,6 +1075,7 @@ function bulkAddRow(){
 
 function bulkSave(){
   var rows=document.getElementById('bulkBody').querySelectorAll('tr');
+  var updatedRecords=[];
   rows.forEach(function(row){
     var idx=parseInt(row.dataset.idx);
     if(isNaN(idx)||idx<0||idx>=records.length)return;
@@ -1071,20 +1085,42 @@ function bulkSave(){
       var colDef=(bulkType==='buy'?BUY_COLS:SELL_COLS).find(function(c){return c.key===col;});
       r[col]=colDef&&colDef.type==='number'?(parseFloat(inp.value)||0):inp.value;
     });
+    if(bulkType==='sell') r.fee=Math.round((r.price||0)*0.1);
+    updatedRecords.push(r);
   });
-  // 販売レコードの手数料を自動計算
-  if(bulkType==='sell'){
-    rows.forEach(function(row){
-      var idx=parseInt(row.dataset.idx);
-      if(isNaN(idx)||idx<0||idx>=records.length)return;
-      var r=records[idx];
-      if(r.type==='sell') r.fee=Math.round((r.price||0)*0.1);
-    });
-  }
   renderRecords();updateSummary();
-  setSyncBadge('✓ 保存済み','#00c896');
-  setTimeout(function(){setSyncBadge('','');},2000);
-  document.getElementById('bulkStatus').textContent=records.filter(function(r){return r.type===bulkType;}).length+'件（保存済み）';
+  // GASに一括同期
+  setSyncBadge('⏳ GASに同期中...','#888');
+  bulkSyncToGAS(updatedRecords, function(ok){
+    setSyncBadge(ok?'✓ 保存・同期完了':'✓ ローカル保存（GAS同期失敗）', ok?'#00c896':'#f5c518');
+    setTimeout(function(){setSyncBadge('','');},3000);
+    document.getElementById('bulkStatus').textContent=records.filter(function(r){return r.type===bulkType;}).length+'件（保存済み）';
+  });
+}
+
+function bulkSyncToGAS(recs, cb){
+  // GASのdoPostに delete+add で上書き（シンプルな全件再送）
+  // まず既存データを全削除してから再追加
+  var gasRecs=recs.filter(function(r){return r._gasId;});
+  var total=gasRecs.length;
+  if(!total){cb(true);return;}
+  var done=0,failed=0;
+  gasRecs.forEach(function(r){
+    // deleteしてからadd
+    fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'delete',type:r.type,id:r._gasId})})
+    .then(function(){
+      return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'add',record:r})});
+    })
+    .then(function(res){return res.json();})
+    .then(function(res){
+      if(res.ok) done++; else failed++;
+      if(done+failed>=total) cb(failed===0);
+    })
+    .catch(function(){
+      failed++;
+      if(done+failed>=total) cb(false);
+    });
+  });
 }
 
 function bulkDeleteSelected(){
