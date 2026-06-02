@@ -821,7 +821,11 @@ function loadFromGAS(){
   .then(function(res){
     records=[];
     (res.buy||[]).forEach(function(r){records.push({type:'buy',platform:r['プラットフォーム']||'',shop:r['仕入先']||'',item:r['商品名']||'',category:r['カテゴリ']||'',unit_price:r['仕入単価']||0,qty:r['数量']||0,total:r['仕入合計']||0,memo:r['メモ']||'',date:r['仕入日']||'',_gasId:r['ID']});});
-    (res.sell||[]).forEach(function(r){records.push({type:'sell',platform:r['プラットフォーム']||'',order_id:r['注文ID']||'',item:r['商品名']||'',category:r['カテゴリ']||'',qty:r['数量']||1,price:r['販売価格']||0,fee:r['手数料']||0,shipping:r['送料']||0,packing:r['梱包費']||0,cost:r['仕入原価']||0,memo:r['メモ']||'',date:r['販売日']||'',_gasId:r['ID']});});
+    (res.sell||[]).forEach(function(r){
+      var price=r['販売価格']||0;
+      var fee=Math.round(price*0.1); // 手数料は常に10%で再計算
+      records.push({type:'sell',platform:r['プラットフォーム']||'',order_id:r['注文ID']||'',item:r['商品名']||'',category:r['カテゴリ']||'',qty:r['数量']||1,price:price,fee:fee,shipping:r['送料']||0,packing:r['梱包費']||0,cost:r['仕入原価']||0,memo:r['メモ']||'',date:r['販売日']||'',_gasId:r['ID']});
+    });
     renderRecords();updateSummary();
     if(records.length>0)document.getElementById('exportBtn').disabled=false;
     setSyncBadge('✓ '+records.length+'件','#00c896');
