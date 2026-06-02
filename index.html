@@ -905,6 +905,103 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// ── 一括編集 ──────────────────────────────────────────────
+var bulkType='buy';
+var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'fee',label:'手数料',type:'number',w:'70px'},{key:'cost',label:'仕入原価',type:'number',w:'70px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+
+function setBulkType(t){
+  bulkType=t;
+  document.getElementById('btBuy').className='btab'+(t==='buy'?' act-buy':'');
+  document.getElementById('btSell').className='btab'+(t==='sell'?' act-sell':'');
+  renderBulk();
+}
+
+function renderBulk(){
+  var cols=bulkType==='buy'?BUY_COLS:SELL_COLS;
+  var recs=records.filter(function(r){return r.type===bulkType;});
+  document.getElementById('bulkStatus').textContent=recs.length+'件';
+  var head=document.getElementById('bulkHead');
+  head.innerHTML='';
+  var tr=document.createElement('tr');
+  var th0=document.createElement('th');th0.style.width='30px';
+  var chkAll=document.createElement('input');chkAll.type='checkbox';chkAll.className='bt-chk';
+  chkAll.onchange=function(){document.querySelectorAll('.row-chk').forEach(function(c){c.checked=chkAll.checked;});};
+  th0.appendChild(chkAll);tr.appendChild(th0);
+  cols.forEach(function(c){var th=document.createElement('th');th.textContent=c.label;th.style.minWidth=c.w;tr.appendChild(th);});
+  head.appendChild(tr);
+  var body=document.getElementById('bulkBody');
+  body.innerHTML='';
+  recs.forEach(function(r){
+    var actualIdx=records.indexOf(r);
+    var row=document.createElement('tr');row.dataset.idx=actualIdx;
+    var td0=document.createElement('td');
+    var chk=document.createElement('input');chk.type='checkbox';chk.className='bt-chk row-chk';
+    td0.appendChild(chk);row.appendChild(td0);
+    cols.forEach(function(c){
+      var td=document.createElement('td');
+      var inp;
+      if(c.type==='sel'){
+        inp=document.createElement('select');inp.className='bt-select';
+        CATEGORIES.forEach(function(o){var opt=document.createElement('option');opt.value=o;opt.textContent=o;if(r[c.key]===o)opt.selected=true;inp.appendChild(opt);});
+      }else{
+        inp=document.createElement('input');inp.type='text';inp.className='bt-input';
+        inp.value=r[c.key]!==undefined?r[c.key]:'';
+        if(c.type==='number')inp.inputMode='numeric';
+      }
+      inp.dataset.col=c.key;inp.dataset.idx=actualIdx;
+      td.appendChild(inp);row.appendChild(td);
+    });
+    body.appendChild(row);
+  });
+}
+
+function bulkAddRow(){
+  var today=new Date().toISOString().slice(0,10);
+  var newRec={type:bulkType,platform:'カードショップ',date:today,item:'',category:'ポケモンカード',qty:1,memo:''};
+  if(bulkType==='buy'){newRec.shop='';newRec.unit_price=0;newRec.total=0;}
+  else{newRec.price=0;newRec.fee=0;newRec.cost=0;newRec.order_id='';}
+  records.push(newRec);
+  renderBulk();updateSummary();
+  document.getElementById('exportBtn').disabled=false;
+  var body=document.getElementById('bulkBody');
+  if(body.lastChild)body.lastChild.scrollIntoView({behavior:'smooth',block:'end'});
+  setTimeout(function(){
+    var inputs=body.querySelectorAll('.bt-input');
+    if(inputs.length){var last=inputs[inputs.length-(bulkType==='buy'?6:5)];if(last)last.focus();}
+  },100);
+}
+
+function bulkSave(){
+  var rows=document.getElementById('bulkBody').querySelectorAll('tr');
+  rows.forEach(function(row){
+    var idx=parseInt(row.dataset.idx);
+    if(isNaN(idx)||idx<0||idx>=records.length)return;
+    var r=records[idx];
+    row.querySelectorAll('[data-col]').forEach(function(inp){
+      var col=inp.dataset.col;
+      var colDef=(bulkType==='buy'?BUY_COLS:SELL_COLS).find(function(c){return c.key===col;});
+      r[col]=colDef&&colDef.type==='number'?(parseFloat(inp.value)||0):inp.value;
+    });
+  });
+  renderRecords();updateSummary();
+  setSyncBadge('✓ 保存済み','#00c896');
+  setTimeout(function(){setSyncBadge('','');},2000);
+  document.getElementById('bulkStatus').textContent=records.filter(function(r){return r.type===bulkType;}).length+'件（保存済み）';
+}
+
+function bulkDeleteSelected(){
+  var checked=document.querySelectorAll('.row-chk:checked');
+  if(!checked.length){alert('削除する行を選択してください');return;}
+  if(!confirm(checked.length+'件を削除しますか？'))return;
+  var idxs=[];
+  checked.forEach(function(c){idxs.push(parseInt(c.closest('tr').dataset.idx));});
+  idxs.sort(function(a,b){return b-a;});
+  idxs.forEach(function(i){if(i>=0&&i<records.length)records.splice(i,1);});
+  renderBulk();renderRecords();updateSummary();
+  if(!records.length)document.getElementById('exportBtn').disabled=true;
+}
+
 function exportExcel(){
   var wb=XLSX.utils.book_new();
   var buyR=records.filter(function(r){return r.type==='buy';});
