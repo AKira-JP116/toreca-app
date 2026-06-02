@@ -274,18 +274,6 @@ main{padding:16px;max-width:760px;margin:0 auto;}
   </div>
   <!-- 月次統計パネル -->
   <div class="stats-panel" id="statsPanel">
-    <!-- 年間トータル -->
-    <div class="annual-card">
-      <div class="annual-title" id="annualTitle">📅 2026年 年間トータル</div>
-      <div class="annual-grid">
-        <div class="annual-item"><span class="annual-label">年間仕入</span><span class="annual-val buy" id="annBuy">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">年間販売</span><span class="annual-val sell" id="annSell">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">年間粗利</span><span class="annual-val profit" id="annProfit">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">仕入件数</span><span class="annual-val" style="color:var(--muted)" id="annBuyCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">販売件数</span><span class="annual-val" style="color:var(--muted)" id="annSellCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">年間利益率</span><span class="annual-val" style="color:#a78bfa" id="annMargin">-%</span></div>
-      </div>
-    </div>
     <div class="month-selector">
       <button class="month-nav" onclick="changeMonth(-1)">‹</button>
       <div class="month-label" id="monthLabel"></div>
@@ -325,6 +313,18 @@ main{padding:16px;max-width:760px;margin:0 auto;}
       <div class="chart-legend">
         <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--y)"></div>仕入れ</div>
         <div class="chart-leg-item"><div class="chart-leg-dot" style="background:var(--g)"></div>販売</div>
+      </div>
+    </div>
+    <!-- 年間トータル -->
+    <div class="annual-card">
+      <div class="annual-title" id="annualTitle">📅 2026年 年間トータル</div>
+      <div class="annual-grid">
+        <div class="annual-item"><span class="annual-label">年間仕入</span><span class="annual-val buy" id="annBuy">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">年間販売</span><span class="annual-val sell" id="annSell">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">年間粗利</span><span class="annual-val profit" id="annProfit">¥0</span></div>
+        <div class="annual-item"><span class="annual-label">仕入件数</span><span class="annual-val" style="color:var(--muted)" id="annBuyCnt">0件</span></div>
+        <div class="annual-item"><span class="annual-label">販売件数</span><span class="annual-val" style="color:var(--muted)" id="annSellCnt">0件</span></div>
+        <div class="annual-item"><span class="annual-label">年間利益率</span><span class="annual-val" style="color:#a78bfa" id="annMargin">-%</span></div>
       </div>
     </div>
   </div>
