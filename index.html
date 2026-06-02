@@ -519,8 +519,8 @@ function renderStats(){
   document.getElementById('monthLabel').textContent=currentYear+'年'+(currentMonth+1)+'月';
 
   // ── 月間 ──
-  var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);});
-  var sellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);});
+  var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').replace(/\//g,'-').slice(0,7)===mn;});
+  var sellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').replace(/\//g,'-').slice(0,7)===mn;});
   var buyT=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
   var sellT=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
   var feeT=sellRecs.reduce(function(s,r){return s+(r.fee||0);},0);
@@ -549,10 +549,23 @@ function renderStats(){
   setEl('statStockCnt','残 '+stk.qty+'点');
 
   // 手元のお金（記録開始〜月末の累計純利益）
-  var endStr2=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-31';
-  var cumSell=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.price||0);},0);
-  var cumBuy=records.filter(function(r){return r.type==='buy'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.total||0);},0);
-  var cumExp=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
+  // 月末日を正確に計算（日付をYYYY-MM形式で前方一致比較）
+  var cumMnPrefix=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
+  var cumSell=records.filter(function(r){
+    var d=(r.date||'').replace(/\//g,'-'); // スラッシュ区切り対応
+    var ym=d.slice(0,7);
+    return r.type==='sell'&&(ym<cumMnPrefix||(ym===cumMnPrefix));
+  }).reduce(function(s,r){return s+(r.price||0);},0);
+  var cumBuy=records.filter(function(r){
+    var d=(r.date||'').replace(/\//g,'-');
+    var ym=d.slice(0,7);
+    return r.type==='buy'&&(ym<cumMnPrefix||(ym===cumMnPrefix));
+  }).reduce(function(s,r){return s+(r.total||0);},0);
+  var cumExp=records.filter(function(r){
+    var d=(r.date||'').replace(/\//g,'-');
+    var ym=d.slice(0,7);
+    return r.type==='sell'&&(ym<cumMnPrefix||(ym===cumMnPrefix));
+  }).reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
   var balance=cumSell-cumBuy-cumExp;
   var cfEl=document.getElementById('statCF');
   if(cfEl){cfEl.textContent=(balance>=0?'+':'')+'¥'+Math.round(balance).toLocaleString();cfEl.style.color=balance>=0?'#00c896':'#ff4d4d';}
