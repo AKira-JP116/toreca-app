@@ -406,7 +406,7 @@ table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:70
 </main>
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycby_OHD59MqabF1jrhHMP5yaj2ExPsJ28nQisyRoEhslqExdtKl-PB_JKkrjzFS4T8yt/exec';
-var mode='buy', platform='カードショップ', records=[], currentFilter='all', shopHistory=[], stockFilter='all';
+var mode='buy', platform='カードショップ', records=[], currentFilter='all', shopHistory=[], stockFilter='all', autoCostForItem=0;
 var currentMonth=new Date().getMonth(), currentYear=new Date().getFullYear();
 var CATEGORIES=['MTG','UNION ARENA','ヴァイスシュヴァルツ','ヴァンガード','ウォーハンマー','ワンピース','遊戯王','デュエマ','バトルスピリッツ','ポケモンカード','その他'];
 var PLATFORMS={buy:['Amazon','カードショップ','その他通販','直接購入','ヤフオク','メルカリ'],sell:['Amazon','カードラッシュ','その他','トレトク','買取業者','ヤフオク','メルカリ']};
@@ -431,7 +431,7 @@ var FIELDS={
     
     {key:'shipping',label:'送料（円）',type:'number',full:false,skippable:true},
     {key:'packing',label:'梱包費（円）',type:'number',full:false,skippable:true},
-    {key:'cost',label:'仕入原価（円）',type:'number',full:false,skippable:true},
+
     {key:'memo',label:'メモ',type:'text',full:true,skippable:true}
   ]
 };
@@ -774,7 +774,17 @@ function renderForm(){
           var tag=document.createElement('span');
           tag.className='stock-tag '+(rem<=0?'stock-none':rem<=2?'stock-low':'stock-ok');
           tag.textContent='在庫 '+rem;
-          opt.onmousedown=function(ev){ev.preventDefault();itemInp.value=e.name;idd.classList.remove('open');var qEl=document.getElementById('f_qty');checkStockAlert(e.name,qEl?qEl.value:1);};
+          opt.onmousedown=function(ev){
+            ev.preventDefault();itemInp.value=e.name;idd.classList.remove('open');
+            var qEl=document.getElementById('f_qty');checkStockAlert(e.name,qEl?qEl.value:1);
+            // 仕入原価を平均仕入単価で自動セット
+            if(mode==='sell'){
+              var stk2=calcStock();var entry2=stk2[e.name];
+              if(entry2&&entry2.avgCost){
+                autoCostForItem=Math.round(entry2.avgCost);
+              }
+            }
+          };
           opt.appendChild(ns);opt.appendChild(tag);idd.appendChild(opt);
         });
         idd.classList.toggle('open',items.length>0||(idd.children.length>0));
@@ -816,6 +826,9 @@ function addRecord(){
   FIELDS[mode].forEach(function(f){var id=f.type==='shop'?'f_shop':f.type==='item'?'f_item':'f_'+f.key;var el=document.getElementById(id);if(!el)return;obj[f.key]=f.type==='number'?(parseFloat(el.value)||0):el.value;});
   if(mode==='sell'){
     obj.fee=Math.round((obj.price||0)*0.1); // 手数料は販売価格の10%
+    // 仕入原価を平均仕入単価から自動計算
+    var stk3=calcStock();var entry3=stk3[(obj.item||'').trim()];
+    obj.cost=entry3&&entry3.avgCost?Math.round(entry3.avgCost):0;
     var rem=getStockOf(obj.item);if(rem!==Infinity&&(parseFloat(obj.qty)||1)>rem){checkStockAlert(obj.item,obj.qty);return;}
   }
   if(obj.shop&&obj.shop.trim()&&shopHistory.indexOf(obj.shop.trim())===-1)shopHistory.push(obj.shop.trim());
@@ -1070,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── 一括編集 ──────────────────────────────────────────────
 var bulkType='buy';
 var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
-var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'cost',label:'仕入原価',type:'number',w:'70px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
 
 function setBulkType(t){
   bulkType=t;
