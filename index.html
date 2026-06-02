@@ -330,37 +330,31 @@ table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:70
       <div class="month-label" id="monthLabel"></div>
       <button class="month-nav" onclick="changeMonth(1)">›</button>
     </div>
-    <div style="font-size:11px;font-weight:700;color:#38bdf8;font-family:'DM Mono',monospace;margin-bottom:8px;">📅 月間</div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-card-label">仕入金額</div>
-        <div class="stat-card-val buy" id="statBuy">¥0</div>
-        <div class="stat-card-sub" id="statBuyCnt">0件</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">販売金額</div>
+        <div class="stat-card-label">💰 売上</div>
         <div class="stat-card-val sell" id="statSell">¥0</div>
-        <div class="stat-card-sub" id="statSellCnt">0件</div>
+        <div class="stat-card-sub" id="statSellCnt">0件　仕入 <span id="statBuy">¥0</span>（<span id="statBuyCnt">0</span>件）</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">粗利（販売−仕入）</div>
+        <div class="stat-card-label">📈 粗利（売上−仕入）</div>
         <div class="stat-card-val profit" id="statProfit">¥0</div>
-        <div class="stat-card-sub" id="statMargin">利益率 -</div>
+        <div class="stat-card-sub" id="statMargin">利益率 -%</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">純利益（粗利−手数料−送料−梱包）</div>
+        <div class="stat-card-label">✨ 純利益（粗利−手数料−送料−梱包）</div>
         <div class="stat-card-val" id="statNet" style="color:#34d399;">¥0</div>
-        <div class="stat-card-sub" id="statNetSub">手数料 ¥0　送料 ¥0　梱包 ¥0</div>
+        <div class="stat-card-sub" id="statNetSub">経費 ¥0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">月末在庫金額（推定）</div>
+        <div class="stat-card-label">👛 手元のお金（累計純利益）</div>
+        <div class="stat-card-val" id="statCF">¥0</div>
+        <div class="stat-card-sub" id="statCFSub">記録開始〜月末累計</div>
+      </div>
+      <div class="stat-card full">
+        <div class="stat-card-label">📦 在庫金額（月末時点・残数×平均仕入単価）</div>
         <div class="stat-card-val stock" id="statStock">¥0</div>
         <div class="stat-card-sub" id="statStockCnt">残 0点</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">月末手元残高（累計純利益）</div>
-        <div class="stat-card-val" id="statCF">¥0</div>
-        <div class="stat-card-sub" id="statCFSub">累計販売 ¥0　累計仕入 ¥0　累計経費 ¥0</div>
       </div>
     </div>
     <div class="monthly-chart">
@@ -376,22 +370,36 @@ table.bulk-table{width:100%;border-collapse:collapse;font-size:12px;min-width:70
     <div class="annual-card">
       <div class="annual-title" id="annualTitle">📅 2026年 年間トータル</div>
       <div class="annual-grid">
-        <div class="annual-item"><span class="annual-label">年間仕入</span><span class="annual-val buy" id="annBuy">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">年間販売</span><span class="annual-val sell" id="annSell">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">年間粗利（販売−仕入）</span><span class="annual-val profit" id="annProfit">¥0</span></div>
-        <div class="annual-item"><span class="annual-label">仕入件数</span><span class="annual-val" style="color:var(--muted)" id="annBuyCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">販売件数</span><span class="annual-val" style="color:var(--muted)" id="annSellCnt">0件</span></div>
-        <div class="annual-item"><span class="annual-label">年間利益率</span><span class="annual-val" style="color:#a78bfa" id="annMargin">-%</span></div>
-      </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-        <div class="annual-label" style="margin-bottom:4px;">年間純利益（粗利−手数料−送料−梱包）</div>
-        <div class="annual-val" id="annNet" style="font-size:20px;color:#34d399;">¥0</div>
-        <div class="annual-label" style="margin-top:3px;" id="annNetSub">手数料 ¥0　送料 ¥0　梱包 ¥0</div>
-      </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-        <div class="annual-label" style="margin-bottom:4px;">年間キャッシュフロー（年間販売収入 − 年間仕入支出）</div>
-        <div class="annual-val" id="annCF" style="font-size:20px;">¥0</div>
-        <div class="annual-label" style="margin-top:3px;" id="annCFSub">販売収入 ¥0　仕入支出 ¥0</div>
+        <div class="annual-item">
+          <span class="annual-label">💰 売上</span>
+          <span class="annual-val sell" id="annSell">¥0</span>
+          <span class="annual-label" id="annSellCnt" style="font-size:10px;">0件</span>
+        </div>
+        <div class="annual-item">
+          <span class="annual-label">🛒 仕入</span>
+          <span class="annual-val buy" id="annBuy">¥0</span>
+          <span class="annual-label" id="annBuyCnt" style="font-size:10px;">0件</span>
+        </div>
+        <div class="annual-item">
+          <span class="annual-label">📈 粗利</span>
+          <span class="annual-val profit" id="annProfit">¥0</span>
+          <span class="annual-label" id="annMargin" style="font-size:10px;">利益率 -%</span>
+        </div>
+        <div class="annual-item">
+          <span class="annual-label">✨ 純利益</span>
+          <span class="annual-val" id="annNet" style="color:#34d399;">¥0</span>
+          <span class="annual-label" id="annNetSub" style="font-size:10px;">経費 ¥0</span>
+        </div>
+        <div class="annual-item">
+          <span class="annual-label">👛 手元のお金</span>
+          <span class="annual-val" id="annCF">¥0</span>
+          <span class="annual-label" id="annCFSub" style="font-size:10px;">年間累計純利益</span>
+        </div>
+        <div class="annual-item">
+          <span class="annual-label">📦 在庫金額</span>
+          <span class="annual-val stock" id="annStock">¥0</span>
+          <span class="annual-label" id="annStockCnt" style="font-size:10px;">残 0点</span>
+        </div>
       </div>
     </div>
   </div>
@@ -481,113 +489,111 @@ function changeMonth(d){
   renderStats();
 }
 
+function calcStockAt(endStr){
+  var map={};
+  records.forEach(function(r){
+    if((r.date||'')>endStr)return;
+    var name=(r.item||'').trim();if(!name)return;
+    if(!map[name])map[name]={qty:0,totalCost:0,bought:0};
+    if(r.type==='buy'){map[name].qty+=(parseFloat(r.qty)||0);map[name].bought+=(parseFloat(r.qty)||0);map[name].totalCost+=(parseFloat(r.total)||0);}
+    if(r.type==='sell')map[name].qty-=(parseFloat(r.qty)||0);
+  });
+  var val=0,qty=0;
+  Object.values(map).forEach(function(e){
+    var rem=Math.max(0,e.qty);
+    val+=rem*(e.bought>0?e.totalCost/e.bought:0);
+    qty+=rem;
+  });
+  return{val:val,qty:qty};
+}
+
+function setEl(id,text,color){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=text;
+  if(color)el.style.color=color;
+}
+
 function renderStats(){
   var mn=currentYear+'-'+String(currentMonth+1).padStart(2,'0');
   document.getElementById('monthLabel').textContent=currentYear+'年'+(currentMonth+1)+'月';
 
-  // ── 当月フィルター ──
+  // ── 月間 ──
   var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);});
   var sellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);});
-  var buyTotal=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
-  var sellTotal=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
-  var feeTotal=sellRecs.reduce(function(s,r){return s+(r.fee||0);},0);
-  var shipTotal=sellRecs.reduce(function(s,r){return s+(r.shipping||0);},0);
-  var packTotal=sellRecs.reduce(function(s,r){return s+(r.packing||0);},0);
-  var profit=sellTotal-buyTotal;
-  var netProfit=profit-feeTotal-shipTotal-packTotal;
-  var margin=sellTotal>0?Math.round((profit/sellTotal)*100):0;
+  var buyT=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
+  var sellT=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
+  var feeT=sellRecs.reduce(function(s,r){return s+(r.fee||0);},0);
+  var shipT=sellRecs.reduce(function(s,r){return s+(r.shipping||0);},0);
+  var packT=sellRecs.reduce(function(s,r){return s+(r.packing||0);},0);
+  var gross=sellT-buyT;
+  var net=gross-feeT-shipT-packT;
+  var margin=sellT>0?Math.round((gross/sellT)*100):0;
 
-  document.getElementById('statBuy').textContent='¥'+Math.round(buyTotal).toLocaleString();
-  document.getElementById('statBuyCnt').textContent=buyRecs.length+'件';
-  document.getElementById('statSell').textContent='¥'+Math.round(sellTotal).toLocaleString();
-  document.getElementById('statSellCnt').textContent=sellRecs.length+'件';
+  setEl('statSell','¥'+Math.round(sellT).toLocaleString());
+  setEl('statSellCnt',sellRecs.length+'件　仕入 ¥'+Math.round(buyT).toLocaleString()+'（'+buyRecs.length+'件）');
+  setEl('statBuy','¥'+Math.round(buyT).toLocaleString());
+  setEl('statBuyCnt',buyRecs.length+'');
   var pEl=document.getElementById('statProfit');
-  pEl.textContent=(profit>=0?'+':'')+'¥'+Math.round(profit).toLocaleString();
-  pEl.style.color=profit>=0?'#a78bfa':'#ff4d4d';
-  document.getElementById('statMargin').textContent='利益率 '+margin+'%';
+  if(pEl){pEl.textContent=(gross>=0?'+':'')+'¥'+Math.round(gross).toLocaleString();pEl.style.color=gross>=0?'#a78bfa':'#ff4d4d';}
+  setEl('statMargin','利益率 '+margin+'%');
   var nEl=document.getElementById('statNet');
-  nEl.textContent=(netProfit>=0?'+':'')+'¥'+Math.round(netProfit).toLocaleString();
-  nEl.style.color=netProfit>=0?'#34d399':'#ff4d4d';
-  document.getElementById('statNetSub').textContent=
-    '手数料 ¥'+Math.round(feeTotal).toLocaleString()+
-    '　送料 ¥'+Math.round(shipTotal).toLocaleString()+
-    '　梱包 ¥'+Math.round(packTotal).toLocaleString();
+  if(nEl){nEl.textContent=(net>=0?'+':'')+'¥'+Math.round(net).toLocaleString();nEl.style.color=net>=0?'#34d399':'#ff4d4d';}
+  setEl('statNetSub','経費（手数料+送料+梱包） ¥'+Math.round(feeT+shipT+packT).toLocaleString());
 
-  // ── 月末在庫金額 ──
+  // 月末在庫
   var endOfMonth=new Date(currentYear,currentMonth+1,0);
   var endStr=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(endOfMonth.getDate()).padStart(2,'0');
-  var stockMap={};
-  records.forEach(function(r){
-    if((r.date||'')>endStr)return;
-    var name=(r.item||'').trim();if(!name)return;
-    if(!stockMap[name])stockMap[name]={qty:0,totalCost:0,bought:0};
-    if(r.type==='buy'){stockMap[name].qty+=(parseFloat(r.qty)||0);stockMap[name].bought+=(parseFloat(r.qty)||0);stockMap[name].totalCost+=(parseFloat(r.total)||0);}
-    if(r.type==='sell')stockMap[name].qty-=(parseFloat(r.qty)||0);
-  });
-  var stockVal=0,stockQty=0;
-  Object.values(stockMap).forEach(function(e){
-    var rem=Math.max(0,e.qty);
-    var avg=e.bought>0?e.totalCost/e.bought:0;
-    stockVal+=rem*avg;stockQty+=rem;
-  });
-  document.getElementById('statStock').textContent='¥'+Math.round(stockVal).toLocaleString();
-  document.getElementById('statStockCnt').textContent='残 '+stockQty+'点';
+  var stk=calcStockAt(endStr);
+  setEl('statStock','¥'+Math.round(stk.val).toLocaleString());
+  setEl('statStockCnt','残 '+stk.qty+'点');
 
-  // ── 月末手元残高（累計純利益） ──
+  // 手元のお金（記録開始〜月末の累計純利益）
   var endStr2=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-31';
   var cumSell=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.price||0);},0);
   var cumBuy=records.filter(function(r){return r.type==='buy'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.total||0);},0);
-  var cumFee=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.fee||0);},0);
-  var cumShip=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.shipping||0);},0);
-  var cumPack=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.packing||0);},0);
-  var balance=cumSell-cumBuy-cumFee-cumShip-cumPack;
+  var cumExp=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endStr2;}).reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
+  var balance=cumSell-cumBuy-cumExp;
   var cfEl=document.getElementById('statCF');
-  cfEl.textContent=(balance>=0?'+':'')+'¥'+Math.round(balance).toLocaleString();
-  cfEl.style.color=balance>=0?'#00c896':'#ff4d4d';
-  document.getElementById('statCFSub').textContent=
-    '累計販売 ¥'+Math.round(cumSell).toLocaleString()+
-    '　累計仕入 ¥'+Math.round(cumBuy).toLocaleString()+
-    '　累計経費 ¥'+Math.round(cumFee+cumShip+cumPack).toLocaleString();
+  if(cfEl){cfEl.textContent=(balance>=0?'+':'')+'¥'+Math.round(balance).toLocaleString();cfEl.style.color=balance>=0?'#00c896':'#ff4d4d';}
+  setEl('statCFSub','累計売上 ¥'+Math.round(cumSell).toLocaleString()+'　累計仕入 ¥'+Math.round(cumBuy).toLocaleString()+'　累計経費 ¥'+Math.round(cumExp).toLocaleString());
 
-  // ── 年間トータル ──
+  // ── 年間 ──
   var yrStr=String(currentYear);
   document.getElementById('annualTitle').textContent='📅 '+currentYear+'年 年間トータル';
-  var annBuyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(yrStr);});
-  var annSellRecs=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(yrStr);});
-  var annBuyT=annBuyRecs.reduce(function(s,r){return s+(r.total||0);},0);
-  var annSellT=annSellRecs.reduce(function(s,r){return s+(r.price||0);},0);
-  var annFeeT=annSellRecs.reduce(function(s,r){return s+(r.fee||0);},0);
-  var annShipT=annSellRecs.reduce(function(s,r){return s+(r.shipping||0);},0);
-  var annPackT=annSellRecs.reduce(function(s,r){return s+(r.packing||0);},0);
-  var annProfit=annSellT-annBuyT;
-  var annNet=annProfit-annFeeT-annShipT-annPackT;
-  var annMargin=annSellT>0?Math.round((annProfit/annSellT)*100):0;
-  document.getElementById('annBuy').textContent='¥'+Math.round(annBuyT).toLocaleString();
-  document.getElementById('annSell').textContent='¥'+Math.round(annSellT).toLocaleString();
-  var apEl=document.getElementById('annProfit');
-  apEl.textContent=(annProfit>=0?'+':'')+'¥'+Math.round(annProfit).toLocaleString();
-  apEl.style.color=annProfit>=0?'#a78bfa':'#ff4d4d';
-  document.getElementById('annBuyCnt').textContent=annBuyRecs.length+'件';
-  document.getElementById('annSellCnt').textContent=annSellRecs.length+'件';
-  document.getElementById('annMargin').textContent=annMargin+'%';
-  var annCF=annSellT-annBuyT;
-  var annCFEl=document.getElementById('annCF');
-  annCFEl.textContent=(annCF>=0?'+':'')+'¥'+Math.round(annCF).toLocaleString();
-  annCFEl.style.color=annCF>=0?'#00c896':'#ff4d4d';
-  // 年間純利益も追加
-  if(document.getElementById('annNet')){
-    var annNetEl=document.getElementById('annNet');
-    annNetEl.textContent=(annNet>=0?'+':'')+'¥'+Math.round(annNet).toLocaleString();
-    annNetEl.style.color=annNet>=0?'#34d399':'#ff4d4d';
-    document.getElementById('annNetSub').textContent=
-      '手数料 ¥'+Math.round(annFeeT).toLocaleString()+
-      '　送料 ¥'+Math.round(annShipT).toLocaleString()+
-      '　梱包 ¥'+Math.round(annPackT).toLocaleString();
-  }
-  document.getElementById('annCFSub').textContent=
-    '販売収入 ¥'+Math.round(annSellT).toLocaleString()+'　仕入支出 ¥'+Math.round(annBuyT).toLocaleString();
+  var aBuyR=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(yrStr);});
+  var aSellR=records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(yrStr);});
+  var aBuyT=aBuyR.reduce(function(s,r){return s+(r.total||0);},0);
+  var aSellT=aSellR.reduce(function(s,r){return s+(r.price||0);},0);
+  var aExp=aSellR.reduce(function(s,r){return s+(r.fee||0)+(r.shipping||0)+(r.packing||0);},0);
+  var aGross=aSellT-aBuyT;
+  var aNet=aGross-aExp;
+  var aMargin=aSellT>0?Math.round((aGross/aSellT)*100):0;
+  // 年間手元（その年の累計純利益）
+  var aEndStr=yrStr+'-12-31';
+  var aCumSell=records.filter(function(r){return r.type==='sell'&&(r.date||'')<=aEndStr&&(r.date||'').startsWith(yrStr);}).reduce(function(s,r){return s+(r.price||0);},0);
+  // 年間在庫（年末時点）
+  var aStkEnd=calcStockAt(aEndStr);
 
-  // 過去6ヶ月チャート
+  setEl('annSell','¥'+Math.round(aSellT).toLocaleString());
+  setEl('annSellCnt',aSellR.length+'件');
+  setEl('annBuy','¥'+Math.round(aBuyT).toLocaleString());
+  setEl('annBuyCnt',aBuyR.length+'件');
+  var apEl=document.getElementById('annProfit');
+  if(apEl){apEl.textContent=(aGross>=0?'+':'')+'¥'+Math.round(aGross).toLocaleString();apEl.style.color=aGross>=0?'#a78bfa':'#ff4d4d';}
+  setEl('annMargin','利益率 '+aMargin+'%');
+  var anEl=document.getElementById('annNet');
+  if(anEl){anEl.textContent=(aNet>=0?'+':'')+'¥'+Math.round(aNet).toLocaleString();anEl.style.color=aNet>=0?'#34d399':'#ff4d4d';}
+  setEl('annNetSub','経費 ¥'+Math.round(aExp).toLocaleString());
+  // 年間手元 = 年間純利益
+  var aCFEl=document.getElementById('annCF');
+  if(aCFEl){aCFEl.textContent=(aNet>=0?'+':'')+'¥'+Math.round(aNet).toLocaleString();aCFEl.style.color=aNet>=0?'#00c896':'#ff4d4d';}
+  setEl('annCFSub','年間純利益ベース');
+  if(document.getElementById('annStock')){
+    setEl('annStock','¥'+Math.round(aStkEnd.val).toLocaleString());
+    setEl('annStockCnt','残 '+aStkEnd.qty+'点');
+  }
+
   renderChart();
 }
 
