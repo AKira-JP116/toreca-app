@@ -279,9 +279,9 @@ main{padding:16px;max-width:760px;margin:0 auto;}
         <div class="stat-card-sub" id="statStockCnt">残 0点</div>
       </div>
       <div class="stat-card full">
-        <div class="stat-card-label">キャッシュフロー（販売収入 − 仕入支出）</div>
+        <div class="stat-card-label">月末手元残高（累計販売収入 − 累計仕入支出）</div>
         <div class="stat-card-val" id="statCF">¥0</div>
-        <div class="stat-card-sub" id="statCFSub">販売収入 ¥0 　仕入支出 ¥0</div>
+        <div class="stat-card-sub" id="statCFSub">累計販売 ¥0　累計仕入 ¥0　当月CF ¥0</div>
       </div>
     </div>
     <div class="monthly-chart">
@@ -422,14 +422,20 @@ function renderStats(){
   document.getElementById('statStock').textContent='¥'+Math.round(stockVal).toLocaleString();
   document.getElementById('statStockCnt').textContent='残 '+stockQty+'点';
 
-  // キャッシュフロー = 販売収入 - 仕入支出
-  var cfVal = sellTotal - buyTotal;
+  // 月末手元残高 = 記録開始〜当月末までの累計販売 - 累計仕入
+  var endOfMonthStr = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-31'; // 月末以前全て含む
+  var cumSell = records.filter(function(r){return r.type==='sell'&&(r.date||'')<=endOfMonthStr;}).reduce(function(s,r){return s+(r.price||0);},0);
+  var cumBuy  = records.filter(function(r){return r.type==='buy' &&(r.date||'')<=endOfMonthStr;}).reduce(function(s,r){return s+(r.total||0);},0);
+  var balance = cumSell - cumBuy;
   var cfEl = document.getElementById('statCF');
-  cfEl.textContent = (cfVal>=0?'+':'')+'¥'+Math.round(cfVal).toLocaleString();
-  cfEl.style.color = cfVal>=0?'#00c896':'#ff4d4d';
+  cfEl.textContent = (balance>=0?'+':'')+'¥'+Math.round(balance).toLocaleString();
+  cfEl.style.color = balance>=0?'#00c896':'#ff4d4d';
+  // 当月CF（当月のみの収支）
+  var monthlyCF = sellTotal - buyTotal;
   document.getElementById('statCFSub').textContent =
-    '販売収入 ¥'+Math.round(sellTotal).toLocaleString()+
-    '　仕入支出 ¥'+Math.round(buyTotal).toLocaleString();
+    '累計販売 ¥'+Math.round(cumSell).toLocaleString()+
+    '　累計仕入 ¥'+Math.round(cumBuy).toLocaleString()+
+    '　当月CF '+(monthlyCF>=0?'+':'')+'¥'+Math.round(monthlyCF).toLocaleString();
 
   // 過去6ヶ月チャート
   renderChart();
