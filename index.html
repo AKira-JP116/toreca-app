@@ -595,6 +595,7 @@ function renderStats(){
   }
 
   renderChart();
+  updateSummary();
 }
 
 function renderChart(){
@@ -651,7 +652,7 @@ function setMode(m){
     document.getElementById('janInput').value='';
     hideAlert();renderForm();
   }else if(m==='stock'){renderStock();}
-  else if(m==='stats'){renderStats();}
+  else if(m==='stats'){renderStats();updateSummary();}
   else if(m==='bulk'){bulkType='buy';renderBulk();}
 }
 function selectPlatform(p,el){platform=p;document.querySelectorAll('.pchip').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');renderForm();}
@@ -836,14 +837,33 @@ function renderRecords(){
 }
 function removeRecord(idx){records.splice(idx,1);renderRecords();updateSummary();if(!records.length)document.getElementById('exportBtn').disabled=true;}
 function updateSummary(){
-  var buyT=records.filter(function(r){return r.type==='buy';}).reduce(function(s,r){return s+(r.total||0);},0);
-  var sellT=records.filter(function(r){return r.type==='sell';}).reduce(function(s,r){return s+(r.price||0);},0);
+  var mn = currentYear+'-'+String(currentMonth+1).padStart(2,'0');
+  var isStats = mode==='stats';
+  var buyRecs = isStats
+    ? records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);})
+    : records.filter(function(r){return r.type==='buy';});
+  var sellRecs = isStats
+    ? records.filter(function(r){return r.type==='sell'&&(r.date||'').startsWith(mn);})
+    : records.filter(function(r){return r.type==='sell';});
+  var buyT=buyRecs.reduce(function(s,r){return s+(r.total||0);},0);
+  var sellT=sellRecs.reduce(function(s,r){return s+(r.price||0);},0);
   var profit=sellT-buyT;
   document.getElementById('sBuy').textContent='¥'+Math.round(buyT).toLocaleString();
   document.getElementById('sSell').textContent='¥'+Math.round(sellT).toLocaleString();
   var pEl=document.getElementById('sProfit');
   pEl.textContent=(profit>=0?'+':'')+'¥'+Math.round(profit).toLocaleString();
   pEl.style.color=profit>=0?'#a78bfa':'#ff4d4d';
+  // ラベルを切り替え
+  var labels=document.querySelectorAll('.slabel');
+  if(isStats){
+    if(labels[0])labels[0].textContent=mn.replace('-','年')+'月 仕入';
+    if(labels[1])labels[1].textContent=mn.replace('-','年')+'月 売上';
+    if(labels[2])labels[2].textContent='月間粗利';
+  }else{
+    if(labels[0])labels[0].textContent='仕入合計';
+    if(labels[1])labels[1].textContent='販売合計';
+    if(labels[2])labels[2].textContent='粗利';
+  }
   document.getElementById('summaryBar').className='summary'+(records.length?' show':'');
 }
 
