@@ -894,11 +894,43 @@ function loadFromGAS(){
   .then(function(r){return r.json();})
   .then(function(res){
     records=[];
-    (res.buy||[]).forEach(function(r){records.push({type:'buy',platform:r['プラットフォーム']||'',shop:r['仕入先']||'',item:r['商品名']||'',category:r['カテゴリ']||'',unit_price:r['仕入単価']||0,qty:r['数量']||0,total:r['仕入合計']||0,memo:r['メモ']||'',date:String(r['仕入日']||'').replace(/\//g,'-'),_gasId:r['ID']});});
+    (res.buy||[]).forEach(function(r){var rawBuyDate=String(r['仕入日']||'');
+      var cleanBuyDate=rawBuyDate.replace(/T.*/,'').replace(/[\/]/g,'-').slice(0,10);
+      records.push({
+        type:'buy',
+        _gasId:String(r['ID']||''),
+        date:cleanBuyDate,
+        platform:String(r['プラットフォーム']||''),
+        shop:String(r['仕入先']||''),
+        item:String(r['商品名']||''),
+        category:String(r['カテゴリ']||''),
+        unit_price:parseFloat(r['仕入単価'])||0,
+        qty:parseFloat(r['数量'])||0,
+        total:parseFloat(r['仕入合計'])||0,
+        memo:String(r['メモ']||'')
+      });});
     (res.sell||[]).forEach(function(r){
-      var price=r['販売価格']||0;
-      var fee=Math.round(price*0.1);
-      records.push({type:'sell',platform:r['プラットフォーム']||'',order_id:r['注文ID']||'',item:r['商品名']||'',category:r['カテゴリ']||'',qty:r['数量']||1,price:price,fee:fee,shipping:r['送料']||0,packing:r['梱包費']||0,cost:r['仕入原価']||0,memo:r['メモ']||'',date:String(r['販売日']||'').replace(/\//g,'-'),_gasId:r['ID']});
+      // スプレッドシート列順: ID|販売日|プラットフォーム|注文ID|商品名|カテゴリ|販売価格|数量|手数料|送料|梱包費|仕入原価|純利益|メモ
+      var price=parseFloat(r['販売価格'])||0;
+      var fee=Math.round(price*0.1); // 手数料は10%で再計算
+      var rawDate=String(r['販売日']||'');
+      var cleanDate=rawDate.replace(/T.*/,'').replace(/[\/]/g,'-').slice(0,10);
+      records.push({
+        type:'sell',
+        _gasId:String(r['ID']||''),
+        date:cleanDate,
+        platform:String(r['プラットフォーム']||''),
+        order_id:String(r['注文ID']||''),
+        item:String(r['商品名']||''),
+        category:String(r['カテゴリ']||''),
+        price:price,
+        qty:parseFloat(r['数量'])||1,
+        fee:fee,
+        shipping:parseFloat(r['送料'])||0,
+        packing:parseFloat(r['梱包費'])||0,
+        cost:parseFloat(r['仕入原価'])||0,
+        memo:String(r['メモ']||'')
+      });
     });
     renderRecords();updateSummary();
     if(records.length>0)document.getElementById('exportBtn').disabled=false;
@@ -975,18 +1007,16 @@ function saveEdit() {
   if(r.type==='sell') r.fee=Math.round((r.price||0)*0.1);
   renderRecords(); updateSummary();
   closeModal();
-  // GASに同期（delete+add）
-  if(r._gasId){
-    setSyncBadge('⏳ 同期中...','#888');
-    fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'delete',type:r.type,id:r._gasId})})
-    .then(function(){return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'add',record:r})});})
-    .then(function(res){return res.json();})
-    .then(function(res){
-      setSyncBadge(res.ok?'✓ 同期済み':'⚠ 同期失敗',res.ok?'#00c896':'#f5c518');
-      setTimeout(function(){setSyncBadge('','');},3000);
-    })
-    .catch(function(){setSyncBadge('⚠ オフライン','#f5c518');setTimeout(function(){setSyncBadge('','');},4000);});
-  }
+  // GASに同期（update）
+  setSyncBadge('⏳ 同期中...','#888');
+  var action=r._gasId?'update':'add';
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:action,id:r._gasId,record:r})})
+  .then(function(res){return res.json();})
+  .then(function(res){
+    setSyncBadge(res.ok?'✓ 同期済み':'⚠ 同期失敗',res.ok?'#00c896':'#f5c518');
+    setTimeout(function(){setSyncBadge('','');},3000);
+  })
+  .catch(function(){setSyncBadge('⚠ オフライン','#f5c518');setTimeout(function(){setSyncBadge('','');},4000);});
 }
 
 function deleteRecord() {
@@ -1099,26 +1129,20 @@ function bulkSave(){
 }
 
 function bulkSyncToGAS(recs, cb){
-  // GASのdoPostに delete+add で上書き（シンプルな全件再送）
-  // まず既存データを全削除してから再追加
-  var gasRecs=recs.filter(function(r){return r._gasId;});
-  var total=gasRecs.length;
+  var total=recs.length;
   if(!total){cb(true);return;}
   var done=0,failed=0;
-  gasRecs.forEach(function(r){
-    // deleteしてからadd
-    fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'delete',type:r.type,id:r._gasId})})
-    .then(function(){
-      return fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:'add',record:r})});
-    })
+  recs.forEach(function(r){
+    var action=r._gasId?'update':'add';
+    fetch(GAS_URL,{method:'POST',body:JSON.stringify({action:action,id:r._gasId,record:r})})
     .then(function(res){return res.json();})
     .then(function(res){
-      if(res.ok) done++; else failed++;
-      if(done+failed>=total) cb(failed===0);
+      if(res.ok)done++;else failed++;
+      if(done+failed>=total)cb(failed===0);
     })
     .catch(function(){
       failed++;
-      if(done+failed>=total) cb(false);
+      if(done+failed>=total)cb(false);
     });
   });
 }
