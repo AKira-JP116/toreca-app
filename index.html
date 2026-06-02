@@ -703,13 +703,25 @@ function renderForm(){
     var inner=document.createElement('div');inner.className='fi-inner';
     if(f.type==='shop'){
       var sw=document.createElement('div');sw.className='shop-wrap';
+      // プラットフォームごとのデフォルト店名候補
+      var shopSuggestions={
+        'カードショップ':['イージーゲームズ','トレカパーク','カードラッシュ','トレトク','駿河屋','まんだらけ','その他'],
+        'Amazon':['Amazon'],
+        'メルカリ':['メルカリ'],
+        'ヤフオク':['ヤフオク'],
+        'その他通販':['楽天','Yahoo!ショッピング','駿河屋','その他'],
+        '直接購入':['個人','友人','その他']
+      };
       var inp=document.createElement('input');inp.type='text';inp.id='f_shop';
       inp.value=platform||'';inp.placeholder='店名を入力または履歴から選択';inp.autocomplete='off';
       var dd=document.createElement('div');dd.className='shop-dd';dd.id='shopDD';
       function refreshDD(){
         dd.innerHTML='';var val=inp.value.trim().toLowerCase();
-        var filtered=shopHistory.filter(function(s){return s.toLowerCase().indexOf(val)!==-1;});
-        if(inp.value.trim()&&shopHistory.indexOf(inp.value.trim())===-1){
+        // プラットフォーム候補を先に表示
+        var platSuggs=shopSuggestions[platform]||[];
+        var allSuggs=platSuggs.concat(shopHistory.filter(function(s){return platSuggs.indexOf(s)===-1;}));
+        var filtered=allSuggs.filter(function(s){return !val||s.toLowerCase().indexOf(val)!==-1;});
+        if(inp.value.trim()&&allSuggs.indexOf(inp.value.trim())===-1){
           var no=document.createElement('div');no.className='shop-opt';
           no.innerHTML='<span>'+inp.value.trim()+'</span><span class="shop-new">新規追加</span>';
           no.onmousedown=function(e){e.preventDefault();dd.classList.remove('open');};dd.appendChild(no);
@@ -717,12 +729,16 @@ function renderForm(){
         filtered.forEach(function(s){
           var opt=document.createElement('div');opt.className='shop-opt';
           var ns=document.createElement('span');ns.textContent=s;
-          var del=document.createElement('button');del.className='shop-opt-del';del.textContent='削除';del.type='button';
-          del.onmousedown=function(e){e.preventDefault();e.stopPropagation();shopHistory=shopHistory.filter(function(x){return x!==s;});refreshDD();};
+          var isHistory=shopHistory.indexOf(s)!==-1&&platSuggs.indexOf(s)===-1;
+          if(isHistory){
+            var del=document.createElement('button');del.className='shop-opt-del';del.textContent='削除';del.type='button';
+            del.onmousedown=function(e){e.preventDefault();e.stopPropagation();shopHistory=shopHistory.filter(function(x){return x!==s;});refreshDD();};
+            opt.appendChild(ns);opt.appendChild(del);
+          }else{opt.appendChild(ns);}
           opt.onmousedown=function(e){e.preventDefault();inp.value=s;dd.classList.remove('open');};
-          opt.appendChild(ns);opt.appendChild(del);dd.appendChild(opt);
+          dd.appendChild(opt);
         });
-        dd.classList.toggle('open',dd.children.length>0);
+        dd.classList.toggle('open',filtered.length>0||dd.children.length>0);
       }
       inp.addEventListener('focus',refreshDD);inp.addEventListener('input',refreshDD);
       inp.addEventListener('blur',function(){setTimeout(function(){dd.classList.remove('open');},150);});
@@ -735,7 +751,22 @@ function renderForm(){
       function refreshItemDD(){
         idd.innerHTML='';var val=itemInp.value.trim().toLowerCase();
         var stk=calcStock();
+        // 全商品名（在庫あり・なし含む）を表示。販売モードは在庫順、仕入れは名前順
         var items=Object.values(stk).filter(function(e){return !val||e.name.toLowerCase().indexOf(val)!==-1;});
+        if(mode==='sell') items.sort(function(a,b){return(b.bought-b.sold)-(a.bought-a.sold);});
+        else items.sort(function(a,b){return a.name.localeCompare(b.name,'ja');});
+        // 過去の商品名も追加（在庫0含む）
+        if(!val&&items.length===0){
+          var allNames=[...new Set(records.map(function(r){return r.item||'';}).filter(Boolean))];
+          allNames.forEach(function(name){
+            if(!stk[name]){
+              var opt=document.createElement('div');opt.className='suggest-opt';
+              var ns=document.createElement('span');ns.textContent=name;
+              opt.onmousedown=function(ev){ev.preventDefault();itemInp.value=name;idd.classList.remove('open');};
+              opt.appendChild(ns);idd.appendChild(opt);
+            }
+          });
+        }
         items.forEach(function(e){
           var rem=e.bought-e.sold;
           var opt=document.createElement('div');opt.className='suggest-opt';
@@ -746,7 +777,7 @@ function renderForm(){
           opt.onmousedown=function(ev){ev.preventDefault();itemInp.value=e.name;idd.classList.remove('open');var qEl=document.getElementById('f_qty');checkStockAlert(e.name,qEl?qEl.value:1);};
           opt.appendChild(ns);opt.appendChild(tag);idd.appendChild(opt);
         });
-        idd.classList.toggle('open',items.length>0&&(val||mode==='sell'));
+        idd.classList.toggle('open',items.length>0||(idd.children.length>0));
       }
       itemInp.addEventListener('focus',refreshItemDD);
       itemInp.addEventListener('input',function(){refreshItemDD();var qEl=document.getElementById('f_qty');checkStockAlert(itemInp.value,qEl?qEl.value:1);});
