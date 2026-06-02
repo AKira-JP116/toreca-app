@@ -415,7 +415,7 @@ var FIELDS={
     {key:'date',label:'仕入日',type:'date',full:false,skippable:false},
     {key:'shop',label:'仕入先・店名',type:'shop',full:false,skippable:true,isDefault:true},
     {key:'item',label:'商品名（カード名）',type:'item',full:true,skippable:false},
-    {key:'category',label:'カテゴリ',type:'sel',full:false,skippable:false},
+
     {key:'unit_price',label:'仕入単価（円）',type:'number',full:false,skippable:true},
     {key:'qty',label:'数量',type:'number',full:false,skippable:false},
     {key:'total',label:'仕入合計（円）',type:'number',full:false,skippable:false},
@@ -425,7 +425,7 @@ var FIELDS={
     {key:'date',label:'販売日',type:'date',full:false,skippable:false},
     {key:'order_id',label:'注文ID / 取引ID',type:'text',full:false,skippable:true,labelAlt:{'買取業者':'買取ID・伝票番号'}},
     {key:'item',label:'商品名',type:'item',full:true,skippable:false},
-    {key:'category',label:'カテゴリ',type:'sel',full:false,skippable:false},
+
     {key:'qty',label:'販売数量',type:'number',full:false,skippable:false},
     {key:'price',label:'販売価格（円）',type:'number',full:false,skippable:false,labelAlt:{'買取業者':'買取金額（円）'}},
     
@@ -1082,8 +1082,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── 一括編集 ──────────────────────────────────────────────
 var bulkType='buy';
-var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
-var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'category',label:'カテゴリ',type:'sel',w:'120px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+var BUY_COLS=[{key:'date',label:'仕入日',type:'date',w:'90px'},{key:'shop',label:'仕入先',type:'text',w:'100px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'unit_price',label:'単価',type:'number',w:'70px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'total',label:'合計',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
+var SELL_COLS=[{key:'date',label:'販売日',type:'date',w:'90px'},{key:'platform',label:'媒体',type:'text',w:'80px'},{key:'item',label:'商品名',type:'text',w:'160px'},{key:'qty',label:'数量',type:'number',w:'50px'},{key:'price',label:'販売価格',type:'number',w:'80px'},{key:'memo',label:'メモ',type:'text',w:'100px'}];
 
 function setBulkType(t){
   bulkType=t;
