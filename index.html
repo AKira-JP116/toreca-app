@@ -188,7 +188,20 @@ main{padding:16px;max-width:760px;margin:0 auto;}
 .rdel:hover{color:var(--danger);}
 .empty{text-align:center;padding:40px 0;color:var(--muted);font-size:13px;}
 .empty-big{font-size:32px;margin-bottom:8px;}
-@media(max-width:480px){.fgrid{grid-template-columns:1fr;}main{padding:12px;}header{padding:12px 14px;}.summary.show{flex-wrap:wrap;}.sitem{min-width:45%;}.si-stats{gap:14px;}.stats-grid{grid-template-columns:1fr;}}
+@media(max-width:480px){.fgrid{grid-template-columns:1fr;}main{padding:12px;}header{padding:12px 14px;}.summary.show{flex-wrap:wrap;}.sitem{min-width:45%;}.si-stats{gap:14px;}.stats-grid{grid-column:1fr;}}
+/* 編集モーダル */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:760px;max-height:90vh;overflow-y:auto;padding:20px;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title{font-size:15px;font-weight:900;}
+.modal-close{width:30px;height:30px;border:none;background:var(--surface2);border-radius:50%;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-actions{display:flex;gap:8px;margin-top:14px;}
+.modal-save{flex:1;padding:12px;border:none;border-radius:var(--r);background:var(--g);color:#000;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:14px;cursor:pointer;}
+.modal-delete{padding:12px 18px;border:1px solid var(--danger);border-radius:var(--r);background:transparent;color:var(--danger);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+.rec-edit{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;border-radius:4px;flex-shrink:0;}
+.rec-edit:hover{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -706,6 +719,7 @@ function renderRecords(){
       +'<div class="rplat">'+(r.platform||'')+'</div>'
       +'<div class="ramnt '+(isBuy?'buy':'sell')+'">'+amt+'</div>'
       +'<div class="rdate">'+(r.date||'-')+'</div>'
+      +'<button class="rec-edit" onclick="openEdit('+idx+')">✏️</button>'
       +'<button class="rdel" onclick="removeRecord('+idx+')">✕</button>';
     list.appendChild(div);
   });
@@ -749,6 +763,79 @@ function loadFromGAS(){
 function setSyncBadge(t,c){var el=document.getElementById('syncBadge');el.textContent=t;el.style.color=c;el.style.display=t?'inline':'none';}
 
 // ── Excel出力 ─────────────────────────────────────────────
+// ── 編集モーダル ──────────────────────────────────────────
+var editingIdx = -1;
+
+function openEdit(idx) {
+  editingIdx = idx;
+  var r = records[idx];
+  var isBuy = r.type === 'buy';
+  document.getElementById('modalTitle').textContent = isBuy ? '🃏 仕入れ記録を編集' : '💴 販売記録を編集';
+  var grid = document.getElementById('modalGrid');
+  grid.innerHTML = '';
+  var fields = FIELDS[r.type];
+  fields.forEach(function(f) {
+    var wrap = document.createElement('div');
+    wrap.className = 'fi' + (f.full ? ' full' : '');
+    var lbl = document.createElement('label');
+    lbl.textContent = (f.labelAlt && f.labelAlt[r.platform]) ? f.labelAlt[r.platform] : f.label;
+    wrap.appendChild(lbl);
+    var inner = document.createElement('div'); inner.className = 'fi-inner';
+    var el;
+    if (f.type === 'sel') {
+      el = document.createElement('select'); el.id = 'edit_' + f.key;
+      CATEGORIES.forEach(function(o) {
+        var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
+        if (r.category === o) opt.selected = true;
+        el.appendChild(opt);
+      });
+    } else if (f.type === 'shop' || f.type === 'item') {
+      el = document.createElement('input'); el.type = 'text'; el.id = 'edit_' + f.key;
+      el.value = r[f.key] || '';
+    } else {
+      el = document.createElement('input'); el.type = f.type; el.id = 'edit_' + f.key;
+      el.value = r[f.key] !== undefined ? r[f.key] : '';
+      if (f.type === 'number') el.inputMode = 'numeric';
+    }
+    inner.appendChild(el);
+    wrap.appendChild(inner);
+    grid.appendChild(wrap);
+  });
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.add('hidden');
+  editingIdx = -1;
+}
+
+function saveEdit() {
+  if (editingIdx < 0) return;
+  var r = records[editingIdx];
+  var fields = FIELDS[r.type];
+  fields.forEach(function(f) {
+    var el = document.getElementById('edit_' + f.key);
+    if (!el) return;
+    r[f.key] = f.type === 'number' ? (parseFloat(el.value) || 0) : el.value;
+  });
+  renderRecords(); updateSummary();
+  closeModal();
+}
+
+function deleteRecord() {
+  if (editingIdx < 0) return;
+  if (!confirm('この記録を削除しますか？')) return;
+  records.splice(editingIdx, 1);
+  renderRecords(); updateSummary();
+  if (!records.length) document.getElementById('exportBtn').disabled = true;
+  closeModal();
+}
+
+// モーダル外タップで閉じる
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
 function exportExcel(){
   var wb=XLSX.utils.book_new();
   var buyR=records.filter(function(r){return r.type==='buy';});
@@ -782,5 +869,19 @@ function exportExcel(){
 setMode('buy');
 loadFromGAS();
 </script>
+<!-- 編集モーダル -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">記録を編集</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fgrid" id="modalGrid"></div>
+    <div class="modal-actions">
+      <button class="modal-save" onclick="saveEdit()">✓ 保存</button>
+      <button class="modal-delete" onclick="deleteRecord()">🗑 削除</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
