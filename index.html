@@ -326,6 +326,11 @@ main{padding:16px;max-width:760px;margin:0 auto;}
         <div class="annual-item"><span class="annual-label">販売件数</span><span class="annual-val" style="color:var(--muted)" id="annSellCnt">0件</span></div>
         <div class="annual-item"><span class="annual-label">年間利益率</span><span class="annual-val" style="color:#a78bfa" id="annMargin">-%</span></div>
       </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div class="annual-label" style="margin-bottom:4px;">年間キャッシュフロー（年間販売収入 − 年間仕入支出）</div>
+        <div class="annual-val" id="annCF" style="font-size:20px;">¥0</div>
+        <div class="annual-label" style="margin-top:3px;" id="annCFSub">販売収入 ¥0　仕入支出 ¥0</div>
+      </div>
     </div>
   </div>
 </main>
@@ -435,6 +440,13 @@ function renderStats(){
   document.getElementById('annBuyCnt').textContent=annBuyRecs.length+'件';
   document.getElementById('annSellCnt').textContent=annSellRecs.length+'件';
   document.getElementById('annMargin').textContent=annMargin+'%';
+  // 年間CF
+  var annCF = annSellT - annBuyT;
+  var annCFEl = document.getElementById('annCF');
+  annCFEl.textContent = (annCF>=0?'+':'')+'¥'+Math.round(annCF).toLocaleString();
+  annCFEl.style.color = annCF>=0?'#00c896':'#ff4d4d';
+  document.getElementById('annCFSub').textContent =
+    '販売収入 ¥'+Math.round(annSellT).toLocaleString()+'　仕入支出 ¥'+Math.round(annBuyT).toLocaleString();
 
   // 当月フィルター
   var buyRecs=records.filter(function(r){return r.type==='buy'&&(r.date||'').startsWith(mn);});
